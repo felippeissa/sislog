@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://images.unsplash.com">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-page="inicio">
   <svg class="svg-sprite" aria-hidden="true">
     <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
     <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L20 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="m15 11 2 2 4-4"/></symbol>
@@ -22,43 +22,12 @@
     <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 4h7a4 4 0 0 1 4 4v12a4 4 0 0 0-4-4H3zM21 4h-7a4 4 0 0 0-4 4v12a4 4 0 0 1 4-4h7z"/></symbol>
   </svg>
 
-  <header class="site-header">
-    <div class="header-inner container">
-      <a class="brand" href="#" aria-label="SISLOG — Página inicial">
-        <span class="brand-mark">S</span>
-        <span class="brand-name">Sislog<sup>3.0</sup></span>
-      </a>
-
-      <nav class="desktop-nav" aria-label="Navegação principal">
-        <a class="active" href="#inicio">Página inicial</a>
-        <a href="#atalhos">Contratações <span>⌄</span></a>
-        <a href="#atalhos">Fornecedores <span>⌄</span></a>
-        <a href="#rodape">Contratos <span>⌄</span></a>
-        <a href="#atalhos">EmendasGO <span>⌄</span></a>
-        <a href="#rodape">Fale conosco <span>⌄</span></a>
-      </nav>
-
-      <a class="portal-button" href="#rodape">Acessar o portal</a>
-
-      <details class="mobile-nav">
-        <summary aria-label="Abrir menu">☰</summary>
-        <nav aria-label="Navegação móvel">
-          <a href="#inicio">Página inicial</a>
-          <a href="#atalhos">Contratações</a>
-          <a href="#atalhos">Fornecedores</a>
-          <a href="#rodape">Contratos</a>
-          <a href="#noticias">Notícias</a>
-          <a href="#rodape">Fale conosco</a>
-        </nav>
-      </details>
-    </div>
-  </header>
+  <div data-include="header"></div>
 
   <main>
     <section class="hero dot-pattern" id="inicio">
       <div class="container hero-inner">
         <div class="intro">
-          <p class="eyebrow">Compras públicas com transparência</p>
           <h1>Boas-vindas ao Portal de Compras do Estado de Goiás</h1>
           <p class="subtitle">Simplificando processos, integrando informações e garantindo eficiência na gestão de compras públicas do Estado de Goiás.</p>
         </div>
@@ -80,16 +49,16 @@
         </div>
 
         <div class="shortcut-grid" id="atalhos">
-          <a class="shortcut" href="#"><svg><use href="#i-cart"/></svg><span>Consulta de<br>Contratações</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-handshake"/></svg><span>Cadastro de<br>Fornecedores</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-list"/></svg><span>Cadastro de Beneficiário de<br>Emenda Parlamentar</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-tag"/></svg><span>Registros de Preços</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-file"/></svg><span>Contratos</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-calendar"/></svg><span>Plano anual<br>de Contratações</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-scale"/></svg><span>Legislação</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-chat"/></svg><span>Vídeos e Manuais</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-handshake"/></svg><span>Manual do Sislog para<br>fornecedores</span></a>
-          <a class="shortcut" href="#"><svg><use href="#i-book"/></svg><span>Modelos de<br>documentos</span></a>
+          <a class="shortcut" href="contratacoes.html"><i class="fa-solid fa-cart-shopping"></i><span>Consulta de<br>Contratações</span></a>
+          <a class="shortcut" href="fornecedores.html"><i class="fa-solid fa-handshake"></i><span>Cadastro de<br>Fornecedores</span></a>
+          <a class="shortcut" href="emendasgo.html"><i class="fa-solid fa-clipboard-list"></i><span>Cadastro de Beneficiário de<br>Emenda Parlamentar</span></a>
+          <a class="shortcut" href="contratacoes.html"><i class="fa-solid fa-tags"></i><span>Registros de Preços</span></a>
+          <a class="shortcut" href="contratos.html"><i class="fa-solid fa-file-contract"></i><span>Contratos</span></a>
+          <a class="shortcut" href="contratacoes.html"><i class="fa-solid fa-calendar-days"></i><span>Plano anual<br>de Contratações</span></a>
+          <a class="shortcut" href="contratacoes.html"><i class="fa-solid fa-scale-balanced"></i><span>Legislação</span></a>
+          <a class="shortcut" href="fale-conosco.html"><i class="fa-solid fa-circle-play"></i><span>Vídeos e Manuais</span></a>
+          <a class="shortcut" href="fornecedores.html"><i class="fa-solid fa-book-open"></i><span>Manual do Sislog para<br>fornecedores</span></a>
+          <a class="shortcut" href="fornecedores.html"><i class="fa-solid fa-file-lines"></i><span>Modelos de<br>documentos</span></a>
         </div>
       </div>
     </section>
@@ -143,28 +112,8 @@
     <svg><use href="#i-chat"/></svg><span>Atendimento</span>
   </a>
 
-  <footer class="site-footer dot-pattern" id="rodape">
-    <div class="container">
-      <div class="footer-top">
-        <a class="brand footer-brand" href="#inicio"><span class="brand-mark light">S</span><span class="brand-name">Sislog</span></a>
-        <div class="socials" aria-label="Redes sociais"><a href="#">X</a><a href="#">in</a><a href="#">GH</a><a href="#">f</a><a href="#">◎</a></div>
-      </div>
+  <div data-include="footer" id="rodape"></div>
 
-      <div class="footer-links">
-        <div><h3>Contratações</h3><a href="#">Licitações</a><a href="#">Contratação direta</a><a href="#">Procedimentos auxiliares</a><a href="#">Registro de preços</a></div>
-        <div><h3>Fornecedores</h3><a href="#">Orientações gerais</a><a href="#">Documentos para homologação</a><a href="#">Modelos de documentos</a><a href="#">Cadastro</a><a href="#">Penalidades</a></div>
-        <div><h3>Contratos</h3><a href="#">Contratos vigentes</a><a href="#">Contratos vencidos</a><h3 class="spaced">Emendas Parlamentares</h3><a href="#">Orientações</a><a href="#">Cadastro</a></div>
-        <div><h3>Notícias e avisos</h3><a href="#">Notícias</a><a href="#">Vídeos e manuais</a><h3 class="spaced">Fale conosco</h3><a href="#">Cadastro de fornecedor</a><a href="#">Central de atendimento</a></div>
-        <div><h3>Serviços</h3><a href="#">Registro de Preços</a><a href="#">Plano anual de contratações</a><a href="#">Legislação</a><a class="footer-portal" href="#">Acessar o portal</a></div>
-      </div>
-
-      <div class="contact-strip">
-        <div><strong>Central de Atendimento</strong><span>+55 (62) 3201-8765</span></div>
-        <div><strong>Cadastro fornecedor</strong><span>+55 (62) 3201-8765</span></div>
-        <div><strong>E-mail</strong><span>sislog.goias@goias.gov.br</span></div>
-      </div>
-      <p class="copyright">Governo do Estado de Goiás © 2025. Todos os direitos reservados.</p>
-    </div>
-  </footer>
+  <script src="app.js"></script>
 </body>
 </html>
