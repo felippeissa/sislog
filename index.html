@@ -3,54 +3,168 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Hello World — SISLOG</title>
-  <style>
-    :root {
-      color-scheme: dark;
-      font-family: Inter, system-ui, sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      min-height: 100vh;
-      margin: 0;
-      display: grid;
-      place-items: center;
-      background: radial-gradient(circle at top, #23407a, #081226 55%, #030712);
-      color: #f8fafc;
-    }
-
-    main {
-      width: min(90%, 680px);
-      padding: 4rem 2rem;
-      text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 24px;
-      background: rgba(15, 23, 42, 0.72);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(16px);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: clamp(3rem, 10vw, 6rem);
-      letter-spacing: -0.06em;
-    }
-
-    p {
-      margin: 1rem 0 0;
-      color: #93c5fd;
-      font-size: 1.15rem;
-    }
-  </style>
+  <meta name="description" content="Portal de Compras do Estado de GoiÃ¡s â€” SISLOG">
+  <title>SISLOG â€” Portal de Compras</title>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <svg class="svg-sprite" aria-hidden="true">
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24"><path d="M3 4h2l2.2 10.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L20 8H6"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/><path d="m15 11 2 2 4-4"/></symbol>
+    <symbol id="i-handshake" viewBox="0 0 24 24"><path d="m9 11 3 3a2 2 0 0 0 3 0l4-4"/><path d="m2 12 5-5 4 1 2-2 4 2 5 5-5 6-3-2-2 2-7-7-3 3z"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><rect x="5" y="3" width="16" height="18" rx="2"/><path d="M9 8h.01M12 8h5M9 12h.01M12 12h5M9 16h.01M12 16h5"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M20 13 11 22l-9-9V4h9z"/><circle cx="7" cy="9" r="1.5"/><path d="m14 17 6-6"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6z"/><path d="M14 2v6h5M9 13h6M9 17h6"/></symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3M8 17h6"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M5 6h14M4 6l-3 7h6zM20 6l-3 7h6zM7 21h10"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 4h16v12H8l-4 4z"/><path d="M9 9a3 3 0 1 1 4 2.8V14M12 17h.01"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M3 4h7a4 4 0 0 1 4 4v12a4 4 0 0 0-4-4H3zM21 4h-7a4 4 0 0 0-4 4v12a4 4 0 0 1 4-4h7z"/></symbol>
+  </svg>
+
+  <header class="site-header">
+    <div class="header-inner container">
+      <a class="brand" href="#" aria-label="SISLOG â€” PÃ¡gina inicial">
+        <span class="brand-mark">S</span>
+        <span class="brand-name">Sislog<sup>3.0</sup></span>
+      </a>
+
+      <nav class="desktop-nav" aria-label="NavegaÃ§Ã£o principal">
+        <a class="active" href="#inicio">PÃ¡gina inicial</a>
+        <a href="#atalhos">ContrataÃ§Ãµes <span>âŒ„</span></a>
+        <a href="#atalhos">Fornecedores <span>âŒ„</span></a>
+        <a href="#rodape">Contratos <span>âŒ„</span></a>
+        <a href="#atalhos">EmendasGO <span>âŒ„</span></a>
+        <a href="#rodape">Fale conosco <span>âŒ„</span></a>
+      </nav>
+
+      <a class="portal-button" href="#rodape">Acessar o portal</a>
+
+      <details class="mobile-nav">
+        <summary aria-label="Abrir menu">â˜°</summary>
+        <nav aria-label="NavegaÃ§Ã£o mÃ³vel">
+          <a href="#inicio">PÃ¡gina inicial</a>
+          <a href="#atalhos">ContrataÃ§Ãµes</a>
+          <a href="#atalhos">Fornecedores</a>
+          <a href="#rodape">Contratos</a>
+          <a href="#noticias">NotÃ­cias</a>
+          <a href="#rodape">Fale conosco</a>
+        </nav>
+      </details>
+    </div>
+  </header>
+
   <main>
-    <h1>Hello World!</h1>
-    <p>SISLOG está no ar.</p>
+    <section class="hero dot-pattern" id="inicio">
+      <div class="container hero-inner">
+        <div class="intro">
+          <p class="eyebrow">Compras pÃºblicas com transparÃªncia</p>
+          <h1>Boas-vindas ao Portal de Compras do Estado de GoiÃ¡s</h1>
+          <p class="subtitle">Simplificando processos, integrando informaÃ§Ãµes e garantindo eficiÃªncia na gestÃ£o de compras pÃºblicas do Estado de GoiÃ¡s.</p>
+        </div>
+
+        <form class="search-panel" action="#noticias">
+          <label class="search-field">
+            <svg><use href="#i-search"/></svg>
+            <input type="search" placeholder="NÃºmero da contrataÃ§Ã£o" aria-label="NÃºmero da contrataÃ§Ã£o">
+          </label>
+          <button type="submit">Buscar</button>
+        </form>
+
+        <div class="quick-search" aria-label="Buscas rÃ¡pidas">
+          <span>ou busque por:</span>
+          <a href="#">LicitaÃ§Ãµes</a>
+          <a href="#">ContrataÃ§Ã£o direta</a>
+          <a href="#">Procedimentos auxiliares</a>
+          <a href="#">Registro de preÃ§os</a>
+        </div>
+
+        <div class="shortcut-grid" id="atalhos">
+          <a class="shortcut" href="#"><svg><use href="#i-cart"/></svg><span>Consulta de<br>ContrataÃ§Ãµes</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-handshake"/></svg><span>Cadastro de<br>Fornecedores</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-list"/></svg><span>Cadastro de BeneficiÃ¡rio de<br>Emenda Parlamentar</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-tag"/></svg><span>Registros de PreÃ§os</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-file"/></svg><span>Contratos</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-calendar"/></svg><span>Plano anual<br>de ContrataÃ§Ãµes</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-scale"/></svg><span>LegislaÃ§Ã£o</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-chat"/></svg><span>VÃ­deos e Manuais</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-handshake"/></svg><span>Manual do Sislog para<br>fornecedores</span></a>
+          <a class="shortcut" href="#"><svg><use href="#i-book"/></svg><span>Modelos de<br>documentos</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="news-section" id="noticias">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Fique por dentro</p>
+            <h2>NotÃ­cias e avisos</h2>
+          </div>
+          <a href="#">Ver todas as notÃ­cias <span>â†’</span></a>
+        </div>
+
+        <div class="news-list">
+          <article class="news-card">
+            <div class="news-image documents" role="img" aria-label="Documentos e calculadora"></div>
+            <div class="news-copy">
+              <time datetime="2025-03-09">09/03/2025</time>
+              <h3>Aviso Importante: AtualizaÃ§Ã£o do SISLOG em Breve!</h3>
+              <p>O Estado de GoiÃ¡s estÃ¡ modernizando seus processos de compras para oferecer mais agilidade, transparÃªncia e seguranÃ§a a gestores e fornecedores.</p>
+              <a href="#">Ver mais</a>
+            </div>
+          </article>
+
+          <article class="news-card">
+            <div class="news-image meeting" role="img" aria-label="Equipe reunida em mesa de trabalho"></div>
+            <div class="news-copy">
+              <time datetime="2025-03-09">09/03/2025</time>
+              <h3>Nova Funcionalidade: Rastreamento de Pedidos em Tempo Real!</h3>
+              <p>Acompanhe cada etapa de suas solicitaÃ§Ãµes com informaÃ§Ãµes claras e atualizadas no novo ambiente de contrataÃ§Ãµes pÃºblicas.</p>
+              <a href="#">Ver mais</a>
+            </div>
+          </article>
+
+          <article class="news-card">
+            <div class="news-image coins" role="img" aria-label="Moedas representando economia pÃºblica"></div>
+            <div class="news-copy">
+              <time datetime="2025-03-09">09/03/2025</time>
+              <h3>AtenÃ§Ã£o: PolÃ­tica de SeguranÃ§a de Dados Atualizada!</h3>
+              <p>ConheÃ§a as novas orientaÃ§Ãµes para proteÃ§Ã£o de dados e utilizaÃ§Ã£o segura dos serviÃ§os digitais disponibilizados pelo SISLOG.</p>
+              <a href="#">Ver mais</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <a class="support-button" href="#rodape" aria-label="Abrir atendimento">
+    <svg><use href="#i-chat"/></svg><span>Atendimento</span>
+  </a>
+
+  <footer class="site-footer dot-pattern" id="rodape">
+    <div class="container">
+      <div class="footer-top">
+        <a class="brand footer-brand" href="#inicio"><span class="brand-mark light">S</span><span class="brand-name">Sislog</span></a>
+        <div class="socials" aria-label="Redes sociais"><a href="#">X</a><a href="#">in</a><a href="#">GH</a><a href="#">f</a><a href="#">â—Ž</a></div>
+      </div>
+
+      <div class="footer-links">
+        <div><h3>ContrataÃ§Ãµes</h3><a href="#">LicitaÃ§Ãµes</a><a href="#">ContrataÃ§Ã£o direta</a><a href="#">Procedimentos auxiliares</a><a href="#">Registro de preÃ§os</a></div>
+        <div><h3>Fornecedores</h3><a href="#">OrientaÃ§Ãµes gerais</a><a href="#">Documentos para homologaÃ§Ã£o</a><a href="#">Modelos de documentos</a><a href="#">Cadastro</a><a href="#">Penalidades</a></div>
+        <div><h3>Contratos</h3><a href="#">Contratos vigentes</a><a href="#">Contratos vencidos</a><h3 class="spaced">Emendas Parlamentares</h3><a href="#">OrientaÃ§Ãµes</a><a href="#">Cadastro</a></div>
+        <div><h3>NotÃ­cias e avisos</h3><a href="#">NotÃ­cias</a><a href="#">VÃ­deos e manuais</a><h3 class="spaced">Fale conosco</h3><a href="#">Cadastro de fornecedor</a><a href="#">Central de atendimento</a></div>
+        <div><h3>ServiÃ§os</h3><a href="#">Registro de PreÃ§os</a><a href="#">Plano anual de contrataÃ§Ãµes</a><a href="#">LegislaÃ§Ã£o</a><a class="footer-portal" href="#">Acessar o portal</a></div>
+      </div>
+
+      <div class="contact-strip">
+        <div><strong>Central de Atendimento</strong><span>+55 (62) 3201-8765</span></div>
+        <div><strong>Cadastro fornecedor</strong><span>+55 (62) 3201-8765</span></div>
+        <div><strong>E-mail</strong><span>sislog.goias@goias.gov.br</span></div>
+      </div>
+      <p class="copyright">Governo do Estado de GoiÃ¡s Â© 2025. Todos os direitos reservados.</p>
+    </div>
+  </footer>
 </body>
 </html>
