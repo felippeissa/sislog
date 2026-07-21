@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cadastro de fornecedor — Portal de Compras do Estado de Goiás — SISLOG">
+  <title>SISLOG — Cadastro de fornecedor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="fornecedores">
+  <div data-include="header"></div>
+
+  <main>
+    <section class="page-section" style="padding-top: 30px;">
+      <div class="container">
+        <nav class="breadcrumb left">
+          <a href="index.html">Página Inicial</a><span>•</span>
+          <a href="fornecedores.html">Fornecedores</a><span>•</span>
+          <span class="current">Cadastro de fornecedor</span>
+        </nav>
+
+        <div class="cad-hero">
+          <div>
+            <h1>Cadastro de fornecedor</h1>
+            <p>Aqui você realiza o seu pré-cadastro para começar a participar de licitações no Estado de Goiás.</p>
+          </div>
+          <i class="fa-solid fa-handshake cad-hero-icon" aria-hidden="true"></i>
+        </div>
+
+        <div class="cad-help">
+          <span>Em caso de dúvidas, acesse:</span>
+          <a href="#">Orientações Gerais Sobre o Cadastro de Fornecedores</a>
+          <a href="#">Manual do Fornecedor</a>
+        </div>
+
+        <div class="chat-card">
+          <div class="chat-log" id="chatLog" aria-live="polite"></div>
+
+          <div class="quick-replies-slot" id="quickSlot"></div>
+
+          <form class="chat-input" id="chatForm">
+            <button type="button" class="chat-emoji" aria-label="Emoji"><i class="fa-regular fa-face-smile"></i></button>
+            <button type="button" class="chat-attach" id="chatAttach" aria-label="Anexar documento"><i class="fa-solid fa-paperclip"></i></button>
+            <input type="text" id="chatText" placeholder="Type a message" autocomplete="off">
+            <button type="submit" class="chat-send" id="chatSend" aria-label="Enviar mensagem"><i class="fa-solid fa-paper-plane"></i></button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-include="footer" id="rodape"></div>
+  <script src="app.js"></script>
+  <script src="cadastro.js"></script>
+</body>
+</html>

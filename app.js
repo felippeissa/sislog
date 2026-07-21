@@ -22,7 +22,7 @@
       { label: 'Orientações Gerais', href: '#' },
       { label: 'Documentos para Homologação', href: '#' },
       { label: 'Modelos de Documentos para Homologação', href: '#' },
-      { label: 'Cadastro', href: '#' },
+      { label: 'Cadastro', href: 'cadastro-fornecedor.html' },
       { label: 'Penalidades', href: '#', children: [
         { label: 'Certidão Negativa/Positiva', href: '#' },
         { label: 'Fornecedores com Penalidades', href: '#' }
