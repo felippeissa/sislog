@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Login ID Goiás — PROTÓTIPO SISLOG (não realiza autenticação real, não envia dados)">
+  <title>ID Goiás</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ===== background.css (real) ===== */
+    @media(max-width: 2975px) { * { font-size: 16px; } }
+    @media(max-width: 1921px) { * { font-size: 14px; } }
+    @media(max-width: 1025px) { * { font-size: 11px; } }
+    @media(max-width: 231px)  { * { font-size: 6px; } }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins'; font-style: normal; }
+    .footer { display: none; }
+    html { height: 100vh; }
+    body {
+      background: url('https://sso.acesso.go.gov.br/authenticationendpoint/images/id_goias/background.png') no-repeat center center !important;
+      background-size: cover !important;
+      background-position: 50%;
+      width: 100vw; height: 100vh; overflow: hidden; z-index: -1;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .main-container {
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      margin: auto; padding: 1.5rem; gap: 1.5rem;
+      width: 28.563rem; height: auto;
+      background-color: white; border-radius: 1.5rem;
+      flex: none; order: 1; flex-grow: 0; z-index: 1;
+    }
+
+    /* ===== header.css (real) ===== */
+    .header-container { display: flex; flex-direction: column; align-items: flex-start; align-content: flex-start; padding: 0rem; gap: 0.5rem; width: 100%; }
+    .header-container h1 { width: 100%; font-weight: 500; font-size: 1.5rem; line-height: 130%; color: #13161c; flex: none; order: 0; align-self: stretch; flex-grow: 0; }
+    .header-container p { width: 100%; height: auto; font-weight: 500; font-size: 0.875rem; line-height: 125%; font-feature-settings: "ss03" on; color: #313337; }
+
+    /* ===== form.css (real) ===== */
+    #loginForm { display: flex; flex-direction: column; align-items: flex-start; padding: 0rem; gap: 1rem; width: 100%; height: auto; flex: none; order: 1; align-self: stretch; flex-grow: 0; }
+    .input-container { display: flex; flex-direction: column; align-items: flex-start; padding: 0rem; gap: 0.5rem; width: 100%; height: 4.188rem; flex: none; order: 0; align-self: stretch; flex-grow: 0; }
+    .label { display: flex; flex-direction: row; align-items: center; gap: 1rem; width: 100%; height: 1.313rem; flex: none; order: 0; align-self: stretch; flex-grow: 0; }
+    .label-content::before { width: 0.25rem; height: 1.188rem; padding-right: 0.688rem; flex: none; order: 0; flex-grow: 0; content: "*"; color: #ca2535; position: relative; top: 12.5%; }
+    .label-content { width: auto; height: 1.313rem; font-weight: 500; font-size: 1rem; line-height: 130%; display: flex; align-items: center; color: #13161c; flex: none; order: 1; flex-grow: 0; }
+    .input { position: relative; display: flex; flex-direction: column; align-items: flex-start; padding: 0rem; isolation: isolate; width: 100%; height: 2.375rem; flex: none; order: 1; align-self: stretch; flex-grow: 0; transition: 0.6s; outline: 0.375rem solid rgba(0,0,0,0); border-radius: 0.5rem; }
+    .input:hover { outline: 0.375rem solid rgba(0,0,0,0.1); border-radius: 0.5rem; }
+    .input:focus-within:hover { outline: 0.375rem solid #cee4e3; border-radius: 0.5rem; }
+    .input-content { font-weight: 400; font-size: 1rem; line-height: 160%; display: flex; align-items: center; color: #616b78; box-sizing: border-box; padding: 0.5rem; width: 100%; height: 2.375rem; background: #f4f4f4; border: 0.063rem solid #f4f4f4; outline: 0.063rem solid #c1c8d5; border-radius: 0.5rem; flex: none; order: 1; align-self: stretch; flex-grow: 0; z-index: 1; }
+    .input-content:focus { border: 0.063rem solid #0b7675; outline: 0.063rem solid #0b7675; }
+
+    /* ===== toggle-password.css (real) ===== */
+    .toggle-password { position: absolute; right: 3%; top: 50%; transform: translateY(-50%); cursor: pointer; z-index: 2; font-size: 1rem; color: #616B78; }
+
+    /* ===== checkbox.css (real) ===== */
+    .checkbox-container { display: flex; flex-direction: row; align-items: center; padding: 0rem; gap: 0.5rem; width: auto; height: 1.188rem; flex: none; order: 1; flex-grow: 0; }
+    .checkbox-label { position: relative; left: -1.5rem; width: auto; height: 1.188rem; font-weight: 400; font-size: 0.875rem; line-height: 130%; color: #13161c; flex: none; order: 1; flex-grow: 0; }
+    .checkbox-label::after { content: ""; }
+    #chkRemember { flex: none; order: 0; flex-grow: 0; width: 1rem; height: 1rem; opacity: 0; z-index: 1; }
+    .checkbox-input { position: relative; left: -1.5rem; flex: none; order: 0; flex-grow: 0; box-sizing: border-box; width: 1rem; height: 1rem; background: #f4f4f4; border: 0.063rem solid #c1c8d5; outline: 0.188rem solid rgba(0,0,0,0); border-radius: 0.25rem; transition: 0.6s; z-index: 0; }
+    #chkRemember:hover ~ .checkbox-input { outline: 0.188rem solid rgba(0,0,0,0.1); }
+    .checkbox-container input:checked ~ .checkbox-input { border: 0.063rem solid #0b7675; background: #0b7675; }
+    #chkRemember:checked:hover ~ .checkbox-input { outline: 0.188rem solid #cee4e3; }
+    .checkbox-input::after { content: "✔"; color: white; font-size: 0.875rem; line-height: 0.938rem; text-align: center; width: 100%; height: 100%; justify-content: center; align-items: center; display: none; }
+    .checkbox-container input:checked ~ .checkbox-input::after { display: block; }
+
+    /* ===== main-button.css (real) ===== */
+    .main-button { display: flex; flex-direction: row; justify-content: center; align-items: center; padding: 0.5rem 1rem; gap: 0.5rem; isolation: isolate; width: auto; height: 2.5rem; background: #0b7675; border: none; border-radius: 22.5rem; font-weight: 500; font-size: 1.25rem; line-height: 130%; text-align: center; color: #ffffff; flex: none; order: 2; align-self: stretch; flex-grow: 0; cursor: pointer; }
+    .main-button:hover { outline: 0.375rem solid #cee4e3; border-radius: 22.5rem; }
+    .main-button:focus { background: #0c5352; border: #0c5352; }
+    .main-button:disabled { opacity: .8; cursor: default; }
+
+    /* ===== policies.css (real) ===== */
+    .policies-container { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0.5rem; width: 100%; height: auto; flex: none; order: 4; align-self: stretch; flex-grow: 0; }
+    .policies-container p { width: 100%; height: auto; font-weight: 400; font-size: 0.75rem; line-height: 105%; font-feature-settings: 'ss03' on; color: #343942; flex: none; order: 0; flex-grow: 1; }
+    .policies-container a { color: #17a2b8; font-weight: 700; text-decoration: none; font-size: 0.75rem; }
+    .policies-container a:hover { color: #17a2b8; font-weight: 700; text-decoration: underline; }
+
+    /* ===== login.css (real) ===== */
+    .forgot-password-question { display: flex; justify-content: center; align-items: center; width: 100%; height: 1.25rem; font-weight: 500; font-size: 0.875rem; line-height: 125%; text-align: center; font-feature-settings: "ss03" on; color: #0b7675; text-decoration: none; word-wrap: break-word; flex: none; order: 3; align-self: stretch; flex-grow: 0; }
+    .forgot-password-question:hover { text-decoration: underline; }
+    .authentication-container { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0rem; gap: 0.5rem; width: 100%; height: auto; flex: none; order: 3; align-self: stretch; flex-grow: 0; }
+    .gov-br-container { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0rem; gap: 0.5rem; width: 100%; height: 3.5rem; flex: none; order: 2; align-self: stretch; flex-grow: 0; }
+    .gov-br-container a { text-decoration: none; }
+    .signup-question { display: flex; flex-direction: row; justify-content: center; align-items: center; padding: 0rem; gap: 0.625rem; width: 16.938rem; height: 1.125rem; font-weight: 400; font-size: 0.875rem; line-height: 125%; font-feature-settings: 'ss03' on; text-align: center; color: #343942; flex: none; order: 0; flex-grow: 0; }
+    .signup-button { box-sizing: border-box; display: flex; flex-direction: row; justify-content: center; align-items: center; padding: 0.25rem 1rem; gap: 0.5rem; width: 100%; height: 1.875rem; border: 0.063rem solid #0B7675; border-radius: 22.5rem; font-weight: 500; font-size: 1rem; line-height: 130%; text-align: center; color: #0B7675; background-color: white; flex: none; order: 2; align-self: stretch; flex-grow: 0; cursor: pointer; }
+    .signup-button::before { content: "gov.br"; font-family: 'Montserrat', sans-serif; font-style: normal; font-weight: 900; font-size: 0.75rem; line-height: 130%; text-align: center; display: inline-flex; flex-direction: row; justify-content: center; align-items: center; padding: 0.25rem 0.5rem; gap: 0.5rem; color: #0B7675; transition: 0.6s; }
+    .signup-button:hover { background-color: #cee4e3; }
+    .signup-button:hover::before { padding: 0.25rem 0.063rem; }
+
+    /* status do protótipo (feedback de login simulado) */
+    .idg-status { display: none; width: 100%; padding: 0.6rem 0.8rem; border-radius: 0.5rem; background: #eaf6f5; color: #0c5352; font-size: 0.85rem; font-weight: 500; text-align: center; }
+    .idg-status.show { display: block; }
+  </style>
+</head>
+<body>
+  <!-- PROTÓTIPO SISLOG: réplica visual do login ID Goiás. NÃO autentica, NÃO envia dados. -->
+  <div class="main-container">
+    <div class="header-container">
+      <h1>Fazer login com ID Goiás</h1>
+      <p>Preencha os campos abaixo para iniciar sua sessão</p>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="input-container">
+        <div class="label">
+          <label class="label-content" for="usernameUserInput">CPF</label>
+        </div>
+        <div class="input">
+          <input class="input-content" type="text" id="usernameUserInput" name="usernameUserInput" value="" placeholder="Digite seu CPF" maxlength="14" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="input-container">
+        <div class="label">
+          <label class="label-content" for="password">Senha</label>
+        </div>
+        <div class="input">
+          <input class="input-content" type="password" name="password" id="password" value="" autocomplete="off" placeholder="Digite sua senha" maxlength="50">
+          <span class="toggle-password" id="toggle-password">
+            <i class="far fa-eye" id="eye-icon"></i>
+          </span>
+        </div>
+      </div>
+
+      <div class="checkbox-container">
+        <label class="checkbox-label" for="chkRemember">Lembrar meus dados</label>
+        <input type="checkbox" id="chkRemember" name="chkRemember">
+        <span class="checkbox-input"></span>
+      </div>
+    </form>
+
+    <a href="#" class="forgot-password-question" onclick="return false">Esqueceu sua senha?</a>
+
+    <button role="button" class="main-button" form="loginForm" type="submit">Entrar</button>
+
+    <p class="idg-status" id="idgStatus"></p>
+
+    <div class="authentication-container">
+      <div class="sso">
+        <div class="gov-br-container">
+          <p class="signup-question">Ainda não possui uma conta ID Goiás? Crie usando o Gov.br.</p>
+          <button type="button" class="signup-button" id="icon-1" title="Cadastrar ID Goiás" onclick="return false">Cadastrar ID Goiás</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="policies-container">
+      <p>
+        Utilizamos cookies do navegador para rastrear sua sessão e oferecer uma experiência melhor. Você pode consultar a nossa
+        <a href="#" onclick="return false">Política de Cookie</a>
+        para mais detalhes.
+        <br><br>
+        Ao fazer o login, você concorda com nossa
+        <a href="#" onclick="return false">Política de Privacidade</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // PROTÓTIPO: não autentica de verdade, não envia dados a lugar nenhum.
+    (function () {
+      var form = document.getElementById('loginForm');
+      var senha = document.getElementById('password');
+      var toggle = document.getElementById('toggle-password');
+      var eye = document.getElementById('eye-icon');
+      var status = document.getElementById('idgStatus');
+      var btn = document.querySelector('.main-button');
+
+      toggle.addEventListener('click', function () {
+        var show = senha.type === 'password';
+        senha.type = show ? 'text' : 'password';
+        eye.className = show ? 'far fa-eye-slash' : 'far fa-eye';
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        btn.disabled = true;
+        btn.textContent = 'Entrando...';
+        status.className = 'idg-status show';
+        status.textContent = 'Autenticando via ID Goiás...';
+        setTimeout(function () {
+          status.textContent = '✅ Autenticado com sucesso! Retornando ao SISLOG...';
+          // Avisa o chat (outra aba) que a autenticação foi concluída
+          try { var ch = new BroadcastChannel('idgoias-auth'); ch.postMessage('authenticated'); ch.close(); } catch (e) {}
+        }, 1100);
+        setTimeout(function () {
+          window.close();
+          btn.textContent = 'Pode fechar esta aba';
+        }, 2000);
+      });
+    })();
+  </script>
+</body>
+</html>

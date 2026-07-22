@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Autorização de acesso — sócio administrador — SISLOG">
+  <title>SISLOG — Autorização de acesso</title>
+  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="minimals.css?v=1">
+</head>
+<body data-page="fornecedores">
+  <div data-include="header"></div>
+
+  <main class="mnl">
+    <section class="page-section" style="padding-top: 30px;">
+      <div class="container" style="max-width: 760px;">
+        <nav class="breadcrumb left">
+          <a href="index.html">Página Inicial</a><span>•</span>
+          <span class="current">Autorização de acesso</span>
+        </nav>
+
+        <div class="mnl-card">
+          <div class="mnl-card-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+            <div>
+              <p class="mnl-overline">Sócio administrador</p>
+              <h1 class="mnl-card-title" style="font-size:22px;">Solicitação de acesso à empresa</h1>
+              <p class="mnl-card-subtitle" id="cardSub">Um representante solicitou acesso para atuar em nome da sua empresa no SISLOG.</p>
+            </div>
+            <span class="mnl-chip warning" id="statusChip"><i class="fa-regular fa-clock"></i> Aguardando</span>
+          </div>
+
+          <!-- Conteúdo quando HÁ solicitação pendente -->
+          <div id="reqBody">
+            <div style="display:flex; align-items:center; gap:14px; margin-bottom:20px;">
+              <span class="mnl-avatar" id="avatar">--</span>
+              <div>
+                <div class="mnl-strong" style="font-size:16px;" id="reqNome">—</div>
+                <div class="mnl-muted" style="font-size:14px;">Representante solicitante</div>
+              </div>
+            </div>
+
+            <hr class="mnl-divider dashed">
+
+            <div class="mnl-info-grid">
+              <div class="mnl-info-item"><div class="k">CPF do solicitante</div><div class="v" id="reqCpf">—</div></div>
+              <div class="mnl-info-item"><div class="k">E-mail (LGPD)</div><div class="v" id="reqEmail">—</div></div>
+              <div class="mnl-info-item"><div class="k">Empresa</div><div class="v" id="reqEmpresa">—</div></div>
+              <div class="mnl-info-item"><div class="k">CNPJ</div><div class="v" id="reqCnpj">—</div></div>
+              <div class="mnl-info-item"><div class="k">Data da solicitação</div><div class="v" id="reqData">—</div></div>
+              <div class="mnl-info-item"><div class="k">Horário</div><div class="v" id="reqHora">—</div></div>
+            </div>
+
+            <p class="mnl-muted" id="maisPendentes" style="margin:14px 0 0; font-size:13px;"></p>
+
+            <hr class="mnl-divider">
+
+            <div class="mnl-alert info" id="authAlert">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Para confirmar que é você, é necessário autenticar-se com o <strong>ID Goiás</strong> antes de aprovar.</span>
+            </div>
+
+            <div class="mnl-btn-row" id="actions">
+              <button type="button" class="mnl-btn primary" id="approveBtn"><i class="fa-solid fa-id-card"></i> Autenticar e aprovar</button>
+              <button type="button" class="mnl-btn error" id="rejectBtn"><i class="fa-solid fa-xmark"></i> Recusar</button>
+            </div>
+
+            <div class="mnl-alert success" id="doneAlert" style="display:none; margin-top:4px;">
+              <i class="fa-solid fa-circle-check"></i>
+              <span id="doneMsg"></span>
+            </div>
+          </div>
+
+          <!-- Conteúdo quando NÃO há solicitação pendente -->
+          <div id="emptyBody" style="display:none;">
+            <div class="mnl-empty" style="padding:34px 4px;">
+              <i class="fa-regular fa-circle-check" style="font-size:34px; color:var(--mnl-success); display:block; margin-bottom:10px;"></i>
+              Nenhuma solicitação de acesso pendente no momento.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-include="footer" id="rodape"></div>
+  <script src="app.js?v=2"></script>
+  <script src="db.js?v=1"></script>
+  <script>
+    // PROTÓTIPO: lê a solicitação real do "servidor em cache" (db.js).
+    (function () {
+      var DB = window.SislogDB;
+      var current = null;
+
+      var reqBody = document.getElementById('reqBody');
+      var emptyBody = document.getElementById('emptyBody');
+      var statusChip = document.getElementById('statusChip');
+      var cardSub = document.getElementById('cardSub');
+      var approveBtn = document.getElementById('approveBtn');
+      var rejectBtn = document.getElementById('rejectBtn');
+      var actions = document.getElementById('actions');
+      var authAlert = document.getElementById('authAlert');
+      var doneAlert = document.getElementById('doneAlert');
+      var doneMsg = document.getElementById('doneMsg');
+
+      function initials(nome) {
+        var p = (nome || 'RS').trim().split(/\s+/);
+        return ((p[0] || '').charAt(0) + (p[1] || '').charAt(0)).toUpperCase() || 'RS';
+      }
+
+      function loadPending() {
+        var pend = DB ? DB.listarSolicitacoesPendentes() : [];
+        if (!pend.length) { reqBody.style.display = 'none'; emptyBody.style.display = 'block'; statusChip.style.display = 'none'; return; }
+        current = pend[pend.length - 1]; // mais recente
+        document.getElementById('avatar').textContent = initials(current.nome);
+        document.getElementById('reqNome').textContent = current.nome;
+        document.getElementById('reqCpf').textContent = DB.maskCpf(current.cpf) || current.cpf;
+        document.getElementById('reqEmail').textContent = DB.maskEmail(current.email);
+        document.getElementById('reqEmpresa').textContent = current.empresa || '—';
+        document.getElementById('reqCnpj').textContent = current.cnpj || '—';
+        document.getElementById('reqData').textContent = current.data;
+        document.getElementById('reqHora').textContent = current.hora;
+        if (pend.length > 1) document.getElementById('maisPendentes').textContent = '+ ' + (pend.length - 1) + ' outra(s) solicitação(ões) pendente(s).';
+      }
+
+      function finishApproved() {
+        if (current && DB) DB.aprovarSolicitacao(current.id);
+        actions.style.display = 'none';
+        authAlert.style.display = 'none';
+        statusChip.className = 'mnl-chip success';
+        statusChip.innerHTML = '<i class="fa-solid fa-check"></i> Aprovado';
+        doneMsg.textContent = 'Acesso aprovado! ' + (current ? current.nome : 'O representante') + ' foi autorizado e receberá um e-mail para criar a senha.';
+        doneAlert.style.display = 'flex';
+      }
+
+      approveBtn.addEventListener('click', function () {
+        var chan = null;
+        try { chan = new BroadcastChannel('idgoias-auth'); } catch (e) { chan = null; }
+        if (chan) { chan.onmessage = function (ev) { if (ev && ev.data === 'authenticated') { try { chan.close(); } catch (e) {} finishApproved(); } }; }
+        window.open('login-id-goias.html', 'idgoias_login');
+        approveBtn.disabled = true;
+        approveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Aguardando login ID Goiás...';
+      });
+
+      rejectBtn.addEventListener('click', function () {
+        if (current && DB) DB.recusarSolicitacao(current.id);
+        actions.style.display = 'none';
+        authAlert.style.display = 'none';
+        statusChip.className = 'mnl-chip';
+        statusChip.innerHTML = '<i class="fa-solid fa-ban"></i> Recusado';
+        doneAlert.className = 'mnl-alert warning';
+        doneAlert.querySelector('i').className = 'fa-solid fa-triangle-exclamation';
+        doneMsg.textContent = 'Solicitação recusada. O representante não foi autorizado a acessar em nome da empresa.';
+        doneAlert.style.display = 'flex';
+      });
+
+      loadPending();
+    })();
+  </script>
+</body>
+</html>

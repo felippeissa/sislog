@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cadastro de senha — Portal de Compras do Estado de Goiás — SISLOG">
+  <title>SISLOG — Cadastro de senha</title>
+  <link rel="stylesheet" href="styles.css?v=4">
+</head>
+<body data-page="fornecedores">
+  <div data-include="header"></div>
+
+  <main>
+    <section class="page-hero dot-pattern">
+      <div class="container page-hero-inner">
+        <nav class="breadcrumb"><a href="index.html">Início</a><span>›</span> <a href="fornecedores.html">Fornecedores</a><span>›</span> Cadastro de senha</nav>
+        <h1>Cadastro de senha</h1>
+        <p>Defina uma senha de acesso ao SISLOG para concluir o seu cadastro.</p>
+      </div>
+    </section>
+
+    <section class="page-section">
+      <div class="container">
+        <div class="ds-card">
+          <h2>Definir senha de acesso</h2>
+          <p>Crie uma senha e confirme-a para acessar o portal do fornecedor.</p>
+
+          <form class="senha-form" id="senhaForm" novalidate>
+            <div class="senha-field">
+              <label for="senha">Senha</label>
+              <div class="senha-input">
+                <input type="password" id="senha" name="senha" placeholder="Digite sua senha" autocomplete="new-password" required>
+                <button type="button" class="senha-toggle" data-target="senha" aria-label="Mostrar senha"><i class="fa-regular fa-eye"></i></button>
+              </div>
+            </div>
+
+            <div class="senha-field">
+              <label for="repetir">Repita a senha</label>
+              <div class="senha-input">
+                <input type="password" id="repetir" name="repetir" placeholder="Repita sua senha" autocomplete="new-password" required>
+                <button type="button" class="senha-toggle" data-target="repetir" aria-label="Mostrar senha"><i class="fa-regular fa-eye"></i></button>
+              </div>
+            </div>
+
+            <p class="senha-msg" id="senhaMsg" role="alert"></p>
+
+            <button type="submit" class="portal-button senha-submit">Cadastrar senha</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <a class="support-button" href="fale-conosco.html" aria-label="Abrir atendimento">
+    <svg><use href="#i-chat"/></svg><span>Atendimento</span>
+  </a>
+
+  <div data-include="footer" id="rodape"></div>
+  <script src="app.js?v=2"></script>
+  <script src="db.js?v=1"></script>
+  <script>
+    (function () {
+      var DB = window.SislogDB;
+      var cpfParam = new URLSearchParams(location.search).get('cpf');
+      var form = document.getElementById('senhaForm');
+      var senha = document.getElementById('senha');
+      var repetir = document.getElementById('repetir');
+      var msg = document.getElementById('senhaMsg');
+
+      Array.prototype.forEach.call(document.querySelectorAll('.senha-toggle'), function (btn) {
+        btn.addEventListener('click', function () {
+          var input = document.getElementById(btn.getAttribute('data-target'));
+          var show = input.type === 'password';
+          input.type = show ? 'text' : 'password';
+          btn.innerHTML = show ? '<i class="fa-regular fa-eye-slash"></i>' : '<i class="fa-regular fa-eye"></i>';
+        });
+      });
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        msg.className = 'senha-msg';
+        if (!senha.value) { msg.textContent = 'Informe uma senha.'; msg.classList.add('error'); return; }
+        if (senha.value !== repetir.value) { msg.textContent = 'As senhas não coincidem.'; msg.classList.add('error'); return; }
+        if (DB && cpfParam) DB.marcarSenhaCriada(cpfParam);   // marca no "servidor em cache"
+        msg.textContent = '✅ Senha cadastrada com sucesso! Você já pode acessar o SISLOG.';
+        msg.classList.add('ok');
+        form.querySelector('.senha-submit').disabled = true;
+      });
+    })();
+  </script>
+</body>
+</html>

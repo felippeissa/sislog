@@ -1,0 +1,117 @@
+/* ============================================================
+   Minimals (docs.minimals.cc) — componentes replicados em CSS
+   para uso nas telas do SISLOG. Mantém a estrutura do SISLOG
+   (header/footer) e usa estes componentes no conteúdo.
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --mnl-primary-lighter: #C8FAD6;
+  --mnl-primary-light: #5BE49B;
+  --mnl-primary: #00A76F;
+  --mnl-primary-dark: #007867;
+  --mnl-primary-darker: #004B50;
+
+  --mnl-text-primary: #1C252E;
+  --mnl-text-secondary: #637381;
+  --mnl-text-disabled: #919EAB;
+
+  --mnl-grey-100: #F9FAFB;
+  --mnl-grey-200: #F4F6F8;
+  --mnl-grey-300: #DFE3E8;
+  --mnl-grey-400: #C4CDD5;
+  --mnl-grey-500: #919EAB;
+  --mnl-grey-600: #637381;
+
+  --mnl-bg-default: #F4F6F8;
+  --mnl-paper: #FFFFFF;
+  --mnl-divider: rgba(145,158,171,0.2);
+
+  --mnl-success: #22C55E;  --mnl-success-lighter: #D3FCD2;  --mnl-success-darker: #065E49;
+  --mnl-warning: #FFAB00;  --mnl-warning-lighter: #FFF5CC;  --mnl-warning-darker: #7A4100;
+  --mnl-error: #FF5630;    --mnl-error-lighter: #FFE9D5;    --mnl-error-darker: #7A0916;
+  --mnl-info: #00B8D9;     --mnl-info-lighter: #CAFDF5;     --mnl-info-darker: #003768;
+
+  --mnl-radius: 16px;
+  --mnl-radius-sm: 8px;
+  --mnl-shadow-card: 0 0 2px 0 rgba(145,158,171,.2), 0 12px 24px -4px rgba(145,158,171,.12);
+  --mnl-shadow-primary: 0 8px 16px 0 rgba(0,167,111,.24);
+}
+
+.mnl { font-family: 'Public Sans', system-ui, sans-serif; color: var(--mnl-text-primary); }
+.mnl * { box-sizing: border-box; }
+
+/* ---------- Card ---------- */
+.mnl-card { background: var(--mnl-paper); border-radius: var(--mnl-radius); box-shadow: var(--mnl-shadow-card); padding: 24px; }
+.mnl-card + .mnl-card { margin-top: 24px; }
+.mnl-card-header { margin-bottom: 20px; }
+.mnl-card-title { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+.mnl-card-subtitle { margin: 6px 0 0; font-size: 14px; color: var(--mnl-text-secondary); line-height: 1.6; }
+
+/* ---------- Tipografia auxiliar ---------- */
+.mnl-overline { font-size: 12px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--mnl-text-disabled); }
+.mnl-muted { color: var(--mnl-text-secondary); }
+.mnl-strong { font-weight: 700; }
+
+/* ---------- Divider ---------- */
+.mnl-divider { height: 1px; margin: 20px 0; border: 0; background: var(--mnl-divider); }
+.mnl-divider.dashed { background: none; border-top: 1px dashed var(--mnl-divider); }
+
+/* ---------- Botões ---------- */
+.mnl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px; padding: 0 22px; border: 0; border-radius: var(--mnl-radius-sm); font: inherit; font-weight: 700; font-size: 15px; line-height: 1; cursor: pointer; transition: background .2s, box-shadow .2s, border-color .2s, color .2s; }
+.mnl-btn.primary { color: #fff; background: var(--mnl-primary); box-shadow: var(--mnl-shadow-primary); }
+.mnl-btn.primary:hover { background: var(--mnl-primary-dark); }
+.mnl-btn.outlined { color: var(--mnl-text-primary); background: transparent; border: 1px solid var(--mnl-divider); }
+.mnl-btn.outlined:hover { border-color: var(--mnl-text-primary); background: rgba(145,158,171,.08); }
+.mnl-btn.error { color: var(--mnl-error); background: transparent; border: 1px solid rgba(255,86,48,.48); }
+.mnl-btn.error:hover { background: rgba(255,86,48,.08); border-color: var(--mnl-error); }
+.mnl-btn.soft { color: var(--mnl-primary-darker); background: var(--mnl-primary-lighter); }
+.mnl-btn.soft:hover { background: var(--mnl-primary-light); }
+.mnl-btn.sm { height: 36px; padding: 0 14px; font-size: 14px; }
+.mnl-btn:disabled { opacity: .5; cursor: default; box-shadow: none; }
+.mnl-btn-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+
+/* ---------- Inputs ---------- */
+.mnl-field { display: flex; flex-direction: column; gap: 8px; }
+.mnl-label { font-size: 14px; font-weight: 600; color: var(--mnl-text-secondary); }
+.mnl-input { width: 100%; height: 54px; padding: 0 14px; border: 1px solid var(--mnl-divider); border-radius: var(--mnl-radius-sm); background: transparent; font: inherit; font-size: 15px; color: var(--mnl-text-primary); transition: border-color .2s, box-shadow .2s; }
+.mnl-input::placeholder { color: var(--mnl-text-disabled); }
+.mnl-input:hover { border-color: var(--mnl-text-primary); }
+.mnl-input:focus { outline: 0; border-color: var(--mnl-primary); box-shadow: 0 0 0 1px var(--mnl-primary); }
+
+/* ---------- Chip / tag ---------- */
+.mnl-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 13px; font-weight: 600; background: rgba(145,158,171,.16); color: var(--mnl-text-secondary); }
+.mnl-chip.success { background: var(--mnl-success-lighter); color: var(--mnl-success-darker); }
+.mnl-chip.primary { background: var(--mnl-primary-lighter); color: var(--mnl-primary-darker); }
+.mnl-chip.warning { background: var(--mnl-warning-lighter); color: var(--mnl-warning-darker); }
+
+/* ---------- Avatar ---------- */
+.mnl-avatar { display: inline-grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--mnl-primary-lighter); color: var(--mnl-primary-darker); font-weight: 700; font-size: 18px; flex: none; }
+
+/* ---------- Alert (soft) ---------- */
+.mnl-alert { display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px; border-radius: 12px; font-size: 14px; line-height: 1.6; }
+.mnl-alert i { margin-top: 2px; font-size: 18px; }
+.mnl-alert.info { background: var(--mnl-info-lighter); color: var(--mnl-info-darker); }
+.mnl-alert.warning { background: var(--mnl-warning-lighter); color: var(--mnl-warning-darker); }
+.mnl-alert.success { background: var(--mnl-success-lighter); color: var(--mnl-success-darker); }
+
+/* ---------- Lista de dados (key/value) ---------- */
+.mnl-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 24px; }
+.mnl-info-item .k { font-size: 12px; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--mnl-text-disabled); }
+.mnl-info-item .v { margin-top: 4px; font-size: 15px; font-weight: 600; }
+
+/* ---------- Tabela/lista ---------- */
+.mnl-list { display: flex; flex-direction: column; }
+.mnl-list-row { display: flex; align-items: center; gap: 14px; padding: 14px 4px; border-bottom: 1px dashed var(--mnl-divider); }
+.mnl-list-row:last-child { border-bottom: 0; }
+.mnl-list-row .grow { flex: 1; min-width: 0; }
+.mnl-list-row .name { font-weight: 600; font-size: 15px; }
+.mnl-list-row .sub { font-size: 13px; color: var(--mnl-text-secondary); }
+.mnl-iconbtn { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--mnl-text-disabled); cursor: pointer; transition: background .18s, color .18s; }
+.mnl-iconbtn:hover { color: var(--mnl-error); background: rgba(255,86,48,.08); }
+.mnl-empty { padding: 22px 4px; text-align: center; color: var(--mnl-text-disabled); font-size: 14px; }
+
+@media (max-width: 640px) {
+  .mnl-info-grid { grid-template-columns: 1fr; }
+  .mnl-card { padding: 20px; }
+}

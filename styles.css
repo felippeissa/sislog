@@ -198,6 +198,21 @@ button, input { font: inherit; }
 .restart-btn.ghost:hover { color: #fff; background: var(--green-600); border-color: var(--green-600); }
 .chat-input .pulse { color: var(--green-600); animation: attachPulse 1.2s infinite; }
 @keyframes attachPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.18); } }
+
+/* Cadastro de senha */
+.senha-form { display: flex; flex-direction: column; gap: 18px; max-width: 460px; }
+.senha-field { display: flex; flex-direction: column; gap: 7px; }
+.senha-field label { color: var(--green-950); font-size: 13px; font-weight: 700; }
+.senha-input { display: flex; align-items: center; gap: 8px; padding: 0 14px; border: 1px solid rgba(10,103,79,.1); border-radius: 10px; background: rgba(255,255,255,.85); transition: border-color .2s, box-shadow .2s, background .2s; }
+.senha-input:focus-within { border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(0,213,154,.16); background: #fff; }
+.senha-input input { flex: 1; min-width: 0; padding: 13px 0; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 14px; }
+.senha-toggle { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 8px; color: var(--muted); background: transparent; cursor: pointer; transition: background .18s, color .18s; }
+.senha-toggle:hover { color: var(--green-700); background: var(--green-100); }
+.senha-msg { margin: 0; min-height: 18px; font-size: 12.5px; }
+.senha-msg.error { color: #c0392b; }
+.senha-msg.ok { color: var(--green-700); font-weight: 600; }
+.senha-submit { align-self: flex-start; margin: 4px 0 0; border: 0; cursor: pointer; }
+.senha-submit:disabled { opacity: .6; cursor: default; transform: none; box-shadow: none; }
 .link-card strong { display: block; color: #1a302a; font-size: 15px; }
 .link-card small { display: block; margin-top: 3px; color: #6a827b; font-size: 12px; line-height: 1.5; }
 

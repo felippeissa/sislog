@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Cadastro de representantes autorizados — sócio administrador — SISLOG">
+  <title>SISLOG — Representantes autorizados</title>
+  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="minimals.css?v=1">
+</head>
+<body data-page="fornecedores">
+  <div data-include="header"></div>
+
+  <main class="mnl">
+    <section class="page-section" style="padding-top: 30px;">
+      <div class="container" style="max-width: 760px;">
+        <nav class="breadcrumb left">
+          <a href="index.html">Página Inicial</a><span>•</span>
+          <span class="current">Representantes autorizados</span>
+        </nav>
+
+        <div class="mnl-card">
+          <div class="mnl-card-header" style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+            <div>
+              <p class="mnl-overline">Sócio administrador</p>
+              <h1 class="mnl-card-title" style="font-size:22px;">Cadastrar representantes autorizados</h1>
+              <p class="mnl-card-subtitle">Adicione os CPFs dos representantes que poderão atuar em nome da empresa — como uma procuração online. Eles receberão um e-mail para criar a senha, sem precisar passar pelo cadastro.</p>
+            </div>
+            <span class="mnl-chip primary"><i class="fa-solid fa-id-card"></i> Autenticado via ID Goiás</span>
+          </div>
+
+          <div class="mnl-alert info" style="margin-bottom:20px;">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Empresa: <strong>Construtora Aurora LTDA</strong> · CNPJ 12.345.678/0001-90</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap:12px; align-items:end;">
+            <div class="mnl-field">
+              <label class="mnl-label" for="cpf">CPF do representante</label>
+              <input class="mnl-input" type="text" id="cpf" inputmode="numeric" placeholder="000.000.000-00" maxlength="14" autocomplete="off">
+            </div>
+            <div class="mnl-field">
+              <label class="mnl-label" for="nome">Nome (opcional)</label>
+              <input class="mnl-input" type="text" id="nome" placeholder="Nome do representante" autocomplete="off">
+            </div>
+            <button type="button" class="mnl-btn soft" id="addBtn" style="height:54px;"><i class="fa-solid fa-plus"></i> Adicionar</button>
+          </div>
+          <p class="mnl-muted" id="addMsg" style="min-height:16px; margin:8px 0 0; font-size:12.5px;"></p>
+
+          <hr class="mnl-divider">
+
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+            <span class="mnl-overline">Representantes na lista</span>
+            <span class="mnl-chip" id="countChip">0</span>
+          </div>
+          <div class="mnl-list" id="list">
+            <div class="mnl-empty" id="empty">Nenhum representante adicionado ainda.</div>
+          </div>
+
+          <div class="mnl-btn-row" style="margin-top:20px;">
+            <button type="button" class="mnl-btn primary" id="sendBtn" disabled><i class="fa-solid fa-paper-plane"></i> Enviar autorizações</button>
+          </div>
+
+          <div class="mnl-alert success" id="doneAlert" style="display:none; margin-top:16px;">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="doneMsg"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-include="footer" id="rodape"></div>
+  <script src="app.js?v=2"></script>
+  <script src="db.js?v=1"></script>
+  <script>
+    // PROTÓTIPO: grava as autorizações no "servidor em cache" (db.js).
+    (function () {
+      var DB = window.SislogDB;
+      var EMPRESA = { cnpj: '12.345.678/0001-90', empresa: 'Construtora Aurora LTDA' };
+      var cpf = document.getElementById('cpf');
+      var nome = document.getElementById('nome');
+      var addBtn = document.getElementById('addBtn');
+      var addMsg = document.getElementById('addMsg');
+      var list = document.getElementById('list');
+      var empty = document.getElementById('empty');
+      var countChip = document.getElementById('countChip');
+      var sendBtn = document.getElementById('sendBtn');
+      var doneAlert = document.getElementById('doneAlert');
+      var doneMsg = document.getElementById('doneMsg');
+
+      var reps = [];
+
+      function onlyDigits(s) { return (s || '').replace(/\D/g, ''); }
+      function maskCpf(d) {
+        d = onlyDigits(d).slice(0, 11);
+        var out = d;
+        if (d.length > 9) out = d.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+        else if (d.length > 6) out = d.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+        else if (d.length > 3) out = d.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+        return out;
+      }
+      cpf.addEventListener('input', function () { cpf.value = maskCpf(cpf.value); });
+
+      function render() {
+        countChip.textContent = String(reps.length);
+        sendBtn.disabled = reps.length === 0;
+        list.querySelectorAll('.mnl-list-row').forEach(function (n) { n.remove(); });
+        empty.style.display = reps.length ? 'none' : 'block';
+        reps.forEach(function (r, i) {
+          var row = document.createElement('div');
+          row.className = 'mnl-list-row';
+          var initials = (r.nome || 'CPF').trim().slice(0, 2).toUpperCase();
+          row.innerHTML =
+            '<span class="mnl-avatar" style="width:40px;height:40px;font-size:15px;">' + initials + '</span>' +
+            '<div class="grow"><div class="name">' + (r.nome || 'Representante') + '</div><div class="sub">CPF ' + r.cpf + '</div></div>' +
+            '<button type="button" class="mnl-iconbtn" title="Remover" aria-label="Remover"><i class="fa-solid fa-trash-can"></i></button>';
+          row.querySelector('button').addEventListener('click', function () { reps.splice(i, 1); render(); });
+          list.appendChild(row);
+        });
+      }
+
+      addBtn.addEventListener('click', function () {
+        addMsg.className = 'mnl-muted'; addMsg.style.color = '';
+        var digits = onlyDigits(cpf.value);
+        if (digits.length !== 11) { addMsg.textContent = 'Informe um CPF com 11 dígitos.'; addMsg.style.color = 'var(--mnl-error)'; return; }
+        if (reps.some(function (r) { return onlyDigits(r.cpf) === digits; })) { addMsg.textContent = 'Este CPF já está na lista.'; addMsg.style.color = 'var(--mnl-warning-darker)'; return; }
+        reps.push({ cpf: maskCpf(digits), nome: nome.value.trim() });
+        cpf.value = ''; nome.value = ''; addMsg.textContent = ''; cpf.focus();
+        render();
+      });
+
+      sendBtn.addEventListener('click', function () {
+        var n = reps.length;
+        if (DB) DB.adicionarRepresentantes(reps, EMPRESA);   // grava no "servidor em cache"
+        reps = []; render();
+        sendBtn.disabled = true;
+        doneMsg.textContent = n + (n === 1 ? ' representante autorizado' : ' representantes autorizados') + '! Cada um receberá um e-mail para criar a senha de acesso ao SISLOG.';
+        doneAlert.style.display = 'flex';
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>
