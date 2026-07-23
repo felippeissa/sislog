@@ -93,20 +93,32 @@
   function getEmpresa() { return get().empresa; }
 
   /* ---------- Representantes (convites) ---------- */
+  function agora() { return { data: new Date().toLocaleDateString('pt-BR'), hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) }; }
+
   function criarEmailConvite(d, rep, empresa) {
+    var t = agora();
     d.emails.push({
-      id: uid('mail'),
-      para: rep.email,
-      nome: rep.nome,
-      cpf: rep.cpf,
+      id: uid('mail'), tipo: 'convite',
+      para: rep.email, nome: rep.nome, cpf: rep.cpf,
       assunto: 'Convite para representar ' + (empresa ? empresa.razaoSocial : 'a empresa') + ' no SISLOG',
       corpo: 'Olá ' + rep.nome + ', você foi convidado(a) para atuar como representante de ' +
         (empresa ? empresa.razaoSocial + ' (CNPJ ' + empresa.cnpj + ')' : 'uma empresa') +
         ' no SISLOG. Aceite o convite para criar sua senha e acessar o portal.',
-      status: 'nao_lido',
-      repId: rep.id,
-      data: new Date().toLocaleDateString('pt-BR'),
-      hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      status: 'nao_lido', repId: rep.id, data: t.data, hora: t.hora
+    });
+  }
+
+  function criarEmailSolicitacao(d, rep, empresa) {
+    var t = agora();
+    var socioEmail = 'socio.admin@' + slug(empresa ? empresa.nomeFantasia : 'empresa') + '.com.br';
+    d.emails.push({
+      id: uid('mail'), tipo: 'solicitacao',
+      para: socioEmail, nome: rep.nome, cpf: rep.cpf,
+      assunto: 'Nova solicitação de acesso — ' + rep.nome,
+      corpo: rep.nome + ' (CPF ' + maskCpf(rep.cpf) + ') solicitou acesso para representar ' +
+        (empresa ? empresa.razaoSocial + ' (CNPJ ' + empresa.cnpj + ')' : 'a empresa') +
+        ' no SISLOG. Aprove a solicitação para autorizar o acesso.',
+      status: 'nao_lido', repId: rep.id, data: t.data, hora: t.hora
     });
   }
 
@@ -126,6 +138,7 @@
       cpf: formatCpf(req.cpf),
       email: req.email.trim(),
       status: 'pendente',
+      origem: 'convite',
       senhaCriada: false,
       convidadoEm: new Date().toISOString(),
       aceitoEm: null
@@ -134,6 +147,54 @@
     criarEmailConvite(d, rep, empresa);
     save(d);
     return { ok: true, rep: rep };
+  }
+
+  // Solicitação vinda do chat (representante pede acesso -> aparece no painel + e-mail ao sócio)
+  function criarSolicitacaoRepresentante(req) {
+    var empresa = garantirEmpresa(req.cnpj);
+    var d = get();
+    var rep = d.representantes.filter(function (r) { return digits(r.cpf) === digits(req.cpf); })[0];
+    if (!rep) {
+      rep = {
+        id: uid('rep'),
+        nome: (req.nome || 'Representante').trim(),
+        cpf: formatCpf(req.cpf) || (req.cpf || ''),
+        email: req.email || (slug(req.nome) + '@empresa.com.br'),
+        status: 'pendente',
+        origem: 'solicitacao',
+        senhaCriada: false,
+        convidadoEm: new Date().toISOString(),
+        aceitoEm: null
+      };
+      d.representantes.push(rep);
+    }
+    criarEmailSolicitacao(d, rep, empresa);
+    save(d);
+    return rep;
+  }
+
+  // Sócio aprova (no painel ou no e-mail) -> autoriza + gera convite para criar senha
+  function aprovarRepresentantePorCpf(cpf) {
+    var d = get();
+    var empresa = d.empresa || garantirEmpresa();
+    var r = d.representantes.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
+    if (!r) return null;
+    r.status = 'aceito';
+    r.aceitoEm = new Date().toISOString();
+    d.emails.forEach(function (m) { if (m.tipo === 'solicitacao' && digits(m.cpf) === digits(cpf)) m.status = 'lido'; });
+    if (!d.emails.some(function (m) { return m.tipo === 'convite' && digits(m.cpf) === digits(cpf); })) {
+      var t = agora();
+      d.emails.push({
+        id: uid('mail'), tipo: 'convite',
+        para: r.email, nome: r.nome, cpf: r.cpf,
+        assunto: 'Acesso aprovado — crie sua senha no SISLOG',
+        corpo: 'Olá ' + r.nome + ', seu acesso para representar ' + (empresa ? empresa.razaoSocial : 'a empresa') +
+          ' foi aprovado. Aceite para criar sua senha e acessar o portal.',
+        status: 'nao_lido', repId: r.id, data: t.data, hora: t.hora
+      });
+    }
+    save(d);
+    return r;
   }
 
   function listarRepresentantes() { return get().representantes; }
@@ -263,6 +324,7 @@
     adicionarRepresentante: adicionarRepresentante, listarRepresentantes: listarRepresentantes,
     getRepresentante: getRepresentante, getRepresentantePorCpf: getRepresentantePorCpf,
     removerRepresentante: removerRepresentante, aceitarConvitePorCpf: aceitarConvitePorCpf,
+    criarSolicitacaoRepresentante: criarSolicitacaoRepresentante, aprovarRepresentantePorCpf: aprovarRepresentantePorCpf,
     // e-mails
     listarEmails: listarEmails, getEmail: getEmail, marcarEmailLido: marcarEmailLido,
     // chat (compat)

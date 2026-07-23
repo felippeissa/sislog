@@ -6,7 +6,7 @@
   <meta name="description" content="Caixa de e-mails (protótipo) — convites SISLOG">
   <title>SISLOG — Caixa de e-mails</title>
   <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="stylesheet" href="minimals.css?v=2">
+  <link rel="stylesheet" href="minimals.css?v=3">
   <style>
     /* Cliente de e-mail (3 painéis) — layout genérico de webmail, tokens Minimals */
     .mail-app { display: grid; grid-template-columns: 210px 340px 1fr; height: 620px; border: 1px solid var(--mnl-divider); border-radius: var(--mnl-radius); overflow: hidden; background: var(--mnl-paper); box-shadow: var(--mnl-shadow-card); }
@@ -106,7 +106,7 @@
 
   <div data-include="footer" id="rodape"></div>
   <script src="app.js?v=2"></script>
-  <script src="db.js?v=2"></script>
+  <script src="db.js?v=3"></script>
   <script>
     (function () {
       var DB = window.SislogDB;
@@ -158,17 +158,31 @@
           '<p style="font-size:15px; line-height:1.75; color:var(--mnl-text-primary);">' + m.corpo + '</p>' +
           '<div class="mnl-alert info" style="margin:18px 0;"><i class="fa-solid fa-user-tag"></i>' +
           '<span>Convite para: <strong>' + m.nome + '</strong> · CPF ' + DB.maskCpf(m.cpf) + '</span></div>' +
-          '<div class="mnl-btn-row">' +
-          (aceito
-            ? '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Convite já aceito</span>' +
-              '<a class="mnl-btn outlined" href="painel-representante.html?cpf=' + encodeURIComponent(digits(m.cpf)) + '"><i class="fa-solid fa-eye"></i> Ver painel do representante</a>'
-            : '<button type="button" class="mnl-btn primary" id="aceitarBtn"><i class="fa-solid fa-check"></i> Aceitar convite</button>') +
-          '</div>';
-        var btn = document.getElementById('aceitarBtn');
-        if (btn) btn.addEventListener('click', function () {
-          DB.aceitarConvitePorCpf(m.cpf);
-          location.href = 'cadastro-senha.html?cpf=' + encodeURIComponent(digits(m.cpf));
-        });
+          '<div class="mnl-btn-row" id="mailActions"></div>';
+        var actions = document.getElementById('mailActions');
+        var cpfD = digits(m.cpf);
+        if (m.tipo === 'solicitacao') {
+          if (aceito) {
+            actions.innerHTML = '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Solicitação aprovada</span>';
+          } else {
+            var ap = document.createElement('button');
+            ap.type = 'button'; ap.className = 'mnl-btn primary';
+            ap.innerHTML = '<i class="fa-solid fa-check"></i> Aprovar solicitação';
+            ap.addEventListener('click', function () { DB.aprovarRepresentantePorCpf(m.cpf); renderList(); open(m.id); });
+            actions.appendChild(ap);
+          }
+        } else {
+          if (aceito) {
+            actions.innerHTML = '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Convite já aceito</span>' +
+              '<a class="mnl-btn outlined" href="painel-representante.html?cpf=' + encodeURIComponent(cpfD) + '"><i class="fa-solid fa-eye"></i> Ver painel do representante</a>';
+          } else {
+            var ac = document.createElement('button');
+            ac.type = 'button'; ac.className = 'mnl-btn primary';
+            ac.innerHTML = '<i class="fa-solid fa-check"></i> Aceitar convite';
+            ac.addEventListener('click', function () { DB.aceitarConvitePorCpf(m.cpf); location.href = 'cadastro-senha.html?cpf=' + encodeURIComponent(cpfD); });
+            actions.appendChild(ac);
+          }
+        }
       }
 
       searchEl.addEventListener('input', renderList);

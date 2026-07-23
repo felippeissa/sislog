@@ -6,7 +6,7 @@
   <meta name="description" content="Painel do sócio administrador — SISLOG">
   <title>SISLOG — Painel do sócio</title>
   <link rel="stylesheet" href="styles.css?v=4">
-  <link rel="stylesheet" href="minimals.css?v=2">
+  <link rel="stylesheet" href="minimals.css?v=3">
 </head>
 <body data-page="fornecedores">
   <div data-include="header"></div>
@@ -67,8 +67,8 @@
 
   <div data-include="footer" id="rodape"></div>
   <script src="app.js?v=2"></script>
-  <script src="db.js?v=2"></script>
-  <script src="painel.js?v=1"></script>
+  <script src="db.js?v=3"></script>
+  <script src="painel.js?v=2"></script>
   <script>
     (function () {
       var DB = window.SislogDB, UI = window.SislogPainel;
@@ -83,7 +83,11 @@
 
       function refresh() {
         UI.renderEmpresa(document.getElementById('empresaCard'));
-        UI.renderRepresentantes(repList, { editable: true, onRemove: function (id) { DB.removerRepresentante(id); refresh(); } });
+        UI.renderRepresentantes(repList, {
+          editable: true,
+          onApprove: function (id) { var r = DB.getRepresentante(id); if (r) DB.aprovarRepresentantePorCpf(r.cpf); refresh(); },
+          onRemove: function (id) { DB.removerRepresentante(id); refresh(); }
+        });
       }
 
       addBtn.addEventListener('click', function () {

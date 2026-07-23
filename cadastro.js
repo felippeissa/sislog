@@ -94,7 +94,7 @@
       solicita_cnpj: { bot: [ { text: 'Informe o CNPJ da empresa.' } ],
         input: { type: 'text', placeholder: 'Digite o CNPJ...', route: function (v) { session.cnpj = v; return 'cria_solicitacao'; } } },
       cria_solicitacao: {
-        onEnter: function () { if (DB) session.req = DB.criarSolicitacaoAcesso({ nome: session.nome, cpf: session.cpf, cnpj: session.cnpj }); },
+        onEnter: function () { if (DB) session.req = DB.criarSolicitacaoRepresentante({ nome: session.nome, cpf: session.cpf, cnpj: session.cnpj }); },
         bot: function () {
           var req = session.req || {};
           var email = DB ? DB.maskEmail(req.email) : 's****@empresa.com.br';

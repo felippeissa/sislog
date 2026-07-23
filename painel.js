@@ -28,19 +28,24 @@
       var count = document.getElementById('repCount');
       if (count) count.textContent = String(reps.length);
       var rows = reps.map(function (r) {
-        var del = opts.editable
-          ? '<button type="button" class="mnl-iconbtn" data-id="' + r.id + '" title="Excluir representante"><i class="fa-solid fa-trash-can"></i></button>'
-          : '';
+        var acoes = '';
+        if (opts.editable) {
+          if (r.status === 'pendente' && opts.onApprove) acoes += '<button type="button" class="mnl-iconbtn approve" data-approve="' + r.id + '" title="Aprovar"><i class="fa-solid fa-check"></i></button>';
+          if (opts.onRemove) acoes += '<button type="button" class="mnl-iconbtn" data-remove="' + r.id + '" title="Excluir representante"><i class="fa-solid fa-trash-can"></i></button>';
+        }
         return '<div class="mnl-list-row">' +
           '<span class="mnl-avatar" style="width:40px;height:40px;font-size:15px;">' + initials(r.nome) + '</span>' +
           '<div class="grow"><div class="name">' + r.nome + '</div><div class="sub">CPF ' + DB.maskCpf(r.cpf) + ' · ' + DB.maskEmail(r.email) + '</div></div>' +
-          chipStatus(r.status) + del +
+          chipStatus(r.status) + acoes +
           '</div>';
       }).join('');
       el.innerHTML = rows || '<div class="mnl-empty">Nenhum representante cadastrado ainda.</div>';
-      if (opts.editable && opts.onRemove) {
-        Array.prototype.forEach.call(el.querySelectorAll('.mnl-iconbtn'), function (b) {
-          b.addEventListener('click', function () { opts.onRemove(b.getAttribute('data-id')); });
+      if (opts.editable) {
+        Array.prototype.forEach.call(el.querySelectorAll('[data-approve]'), function (b) {
+          b.addEventListener('click', function () { if (opts.onApprove) opts.onApprove(b.getAttribute('data-approve')); });
+        });
+        Array.prototype.forEach.call(el.querySelectorAll('[data-remove]'), function (b) {
+          b.addEventListener('click', function () { if (opts.onRemove) opts.onRemove(b.getAttribute('data-remove')); });
         });
       }
     }

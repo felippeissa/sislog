@@ -109,6 +109,8 @@
 .mnl-list-row .sub { font-size: 13px; color: var(--mnl-text-secondary); }
 .mnl-iconbtn { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--mnl-text-disabled); cursor: pointer; transition: background .18s, color .18s; }
 .mnl-iconbtn:hover { color: var(--mnl-error); background: rgba(255,86,48,.08); }
+.mnl-iconbtn.approve { color: var(--mnl-success); }
+.mnl-iconbtn.approve:hover { color: var(--mnl-success); background: rgba(34,197,94,.12); }
 .mnl-empty { padding: 22px 4px; text-align: center; color: var(--mnl-text-disabled); font-size: 14px; }
 
 /* ---------- Layout dos painéis (2 colunas) ---------- */
