@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Painel do representante — SISLOG">
+  <title>SISLOG — Painel do representante</title>
+  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="minimals.css?v=2">
+</head>
+<body data-page="fornecedores">
+  <div data-include="header"></div>
+
+  <main class="mnl">
+    <section class="page-section" style="padding-top: 30px;">
+      <div class="container" style="max-width: 1040px;">
+        <nav class="breadcrumb left">
+          <a href="index.html">Página Inicial</a><span>•</span>
+          <span class="current">Painel do representante</span>
+        </nav>
+
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px;">
+          <div>
+            <p class="mnl-overline">Representante</p>
+            <h1 class="mnl-card-title" style="font-size:24px;" id="titulo">Painel do representante</h1>
+            <p class="mnl-card-subtitle">Visualização dos dados da empresa e dos representantes autorizados.</p>
+          </div>
+          <span class="mnl-chip"><i class="fa-solid fa-lock"></i> Somente leitura</span>
+        </div>
+
+        <div class="painel-grid">
+          <!-- Coluna esquerda: empresa -->
+          <div class="mnl-card" id="empresaCard"></div>
+
+          <!-- Coluna direita: lista de representantes (sem edição) -->
+          <div class="mnl-card">
+            <div class="mnl-card-header">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <h2 class="mnl-card-title">Representantes</h2>
+                <span class="mnl-chip" id="repCount">0</span>
+              </div>
+              <p class="mnl-card-subtitle">Como representante, você pode consultar a lista e os status, mas não editá-la.</p>
+            </div>
+            <div class="mnl-list" id="repList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-include="footer" id="rodape"></div>
+  <script src="app.js?v=2"></script>
+  <script src="db.js?v=2"></script>
+  <script src="painel.js?v=1"></script>
+  <script>
+    (function () {
+      var DB = window.SislogDB, UI = window.SislogPainel;
+      // Se veio com ?cpf=, personaliza o título com o nome do representante
+      var cpf = new URLSearchParams(location.search).get('cpf');
+      if (cpf) {
+        var rep = DB.getRepresentantePorCpf(cpf);
+        if (rep) document.getElementById('titulo').textContent = 'Olá, ' + rep.nome.split(' ')[0] + '!';
+      }
+      UI.renderEmpresa(document.getElementById('empresaCard'));
+      UI.renderRepresentantes(document.getElementById('repList'), { editable: false });
+    })();
+  </script>
+</body>
+</html>

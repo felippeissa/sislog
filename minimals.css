@@ -111,6 +111,30 @@
 .mnl-iconbtn:hover { color: var(--mnl-error); background: rgba(255,86,48,.08); }
 .mnl-empty { padding: 22px 4px; text-align: center; color: var(--mnl-text-disabled); font-size: 14px; }
 
+/* ---------- Layout dos painéis (2 colunas) ---------- */
+.painel-grid { display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; }
+
+/* ---------- Caixa de e-mails (Outlook) ---------- */
+.inbox { display: grid; grid-template-columns: 320px 1fr; min-height: 460px; border: 1px solid var(--mnl-divider); border-radius: var(--mnl-radius); overflow: hidden; background: var(--mnl-paper); box-shadow: var(--mnl-shadow-card); }
+.inbox-list { border-right: 1px solid var(--mnl-divider); overflow-y: auto; max-height: 560px; }
+.inbox-item { display: flex; flex-direction: column; gap: 3px; padding: 14px 16px; border-bottom: 1px solid var(--mnl-divider); cursor: pointer; transition: background .15s; }
+.inbox-item:hover { background: var(--mnl-grey-100); }
+.inbox-item.active { background: var(--mnl-primary-lighter); }
+.inbox-item.unread .inbox-subject { font-weight: 700; }
+.inbox-item .inbox-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.inbox-from { font-size: 14px; font-weight: 700; }
+.inbox-time { font-size: 12px; color: var(--mnl-text-disabled); flex: none; }
+.inbox-subject { font-size: 13.5px; color: var(--mnl-text-primary); }
+.inbox-preview { font-size: 12.5px; color: var(--mnl-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inbox-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--mnl-primary); flex: none; }
+.inbox-reading { padding: 24px 26px; }
+.inbox-empty { display: grid; place-items: center; color: var(--mnl-text-disabled); font-size: 14px; text-align: center; padding: 40px; }
+
+@media (max-width: 800px) {
+  .painel-grid { grid-template-columns: 1fr; }
+  .inbox { grid-template-columns: 1fr; }
+  .inbox-list { border-right: 0; border-bottom: 1px solid var(--mnl-divider); max-height: 240px; }
+}
 @media (max-width: 640px) {
   .mnl-info-grid { grid-template-columns: 1fr; }
   .mnl-card { padding: 20px; }

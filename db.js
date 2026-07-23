@@ -18,10 +18,14 @@
     var d = load();
     if (!d.solicitacoes) d.solicitacoes = [];
     if (!d.autorizados) d.autorizados = [];
+    if (!d.representantes) d.representantes = [];
+    if (!d.emails) d.emails = [];
+    if (!('empresa' in d)) d.empresa = null;
     return d;
   }
   function save(d) { localStorage.setItem(KEY, JSON.stringify(d)); }
 
+  /* ---------- Máscaras e validações ---------- */
   function maskEmail(e) {
     if (!e || e.indexOf('@') < 0) return e || '';
     var p = e.split('@');
@@ -32,18 +36,146 @@
     if (d.length !== 11) return c || '';
     return d.slice(0, 3) + '.***.***-' + d.slice(9);
   }
+  function formatCpf(c) {
+    var d = digits(c).slice(0, 11);
+    if (d.length > 9) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+    if (d.length > 6) return d.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    if (d.length > 3) return d.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+    return d;
+  }
+  function formatCnpj(c) {
+    var d = digits(c).slice(0, 14);
+    if (d.length > 12) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, '$1.$2.$3/$4-$5');
+    if (d.length > 8) return d.replace(/(\d{2})(\d{3})(\d{3})(\d{1,4})/, '$1.$2.$3/$4');
+    if (d.length > 5) return d.replace(/(\d{2})(\d{3})(\d{1,3})/, '$1.$2.$3');
+    if (d.length > 2) return d.replace(/(\d{2})(\d{1,3})/, '$1.$2');
+    return d;
+  }
+  function cpfFormatoValido(c) { return digits(c).length === 11; }
+  function cnpjFormatoValido(c) { return digits(c).length === 14; }
+  function emailValido(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e || '').trim()); }
+
   function slug(nome) {
     return (nome || 'representante').trim().toLowerCase().split(/\s+/)[0]
       .normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '') || 'representante';
   }
+  function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function uid(p) { return (p || 'id') + '_' + Date.now() + '_' + Math.floor(Math.random() * 10000); }
 
+  /* ---------- Empresa fictícia ---------- */
+  var PREFIXOS = ['Aurora', 'Horizonte', 'Vale', 'Nova', 'Terra', 'Cerrado', 'Bandeirante', 'Araguaia', 'Serra', 'Planalto', 'Ipê', 'Goiás'];
+  var NUCLEOS = ['Construções', 'Logística', 'Engenharia', 'Comércio', 'Serviços', 'Tecnologia', 'Distribuidora', 'Agropecuária', 'Transportes', 'Soluções'];
+  var SUFIXOS = ['LTDA', 'S.A.', 'ME', 'EIRELI'];
+  var RAMOS = ['Construção civil', 'Logística e transporte', 'Comércio atacadista', 'Tecnologia da informação', 'Serviços administrativos', 'Agronegócio'];
+  var CIDADES = ['Goiânia - GO', 'Aparecida de Goiânia - GO', 'Anápolis - GO', 'Rio Verde - GO', 'Catalão - GO', 'Luziânia - GO'];
+
+  function gerarCnpj() {
+    var s = '';
+    for (var i = 0; i < 14; i++) s += Math.floor(Math.random() * 10);
+    return formatCnpj(s);
+  }
+  function gerarEmpresa(cnpj) {
+    var pre = rnd(PREFIXOS), nuc = rnd(NUCLEOS);
+    return {
+      razaoSocial: pre + ' ' + nuc + ' ' + rnd(SUFIXOS),
+      nomeFantasia: pre + ' ' + nuc,
+      cnpj: cnpjFormatoValido(cnpj) ? formatCnpj(cnpj) : gerarCnpj(),
+      ramo: rnd(RAMOS),
+      cidade: rnd(CIDADES),
+      abertura: '0' + (1 + Math.floor(Math.random() * 9)) + '/0' + (1 + Math.floor(Math.random() * 9)) + '/20' + (10 + Math.floor(Math.random() * 14))
+    };
+  }
+  function garantirEmpresa(cnpj) {
+    var d = get();
+    if (!d.empresa) { d.empresa = gerarEmpresa(cnpj); save(d); }
+    return d.empresa;
+  }
+  function getEmpresa() { return get().empresa; }
+
+  /* ---------- Representantes (convites) ---------- */
+  function criarEmailConvite(d, rep, empresa) {
+    d.emails.push({
+      id: uid('mail'),
+      para: rep.email,
+      nome: rep.nome,
+      cpf: rep.cpf,
+      assunto: 'Convite para representar ' + (empresa ? empresa.razaoSocial : 'a empresa') + ' no SISLOG',
+      corpo: 'Olá ' + rep.nome + ', você foi convidado(a) para atuar como representante de ' +
+        (empresa ? empresa.razaoSocial + ' (CNPJ ' + empresa.cnpj + ')' : 'uma empresa') +
+        ' no SISLOG. Aceite o convite para criar sua senha e acessar o portal.',
+      status: 'nao_lido',
+      repId: rep.id,
+      data: new Date().toLocaleDateString('pt-BR'),
+      hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+    });
+  }
+
+  // { ok:true, rep } | { ok:false, erro }
+  function adicionarRepresentante(req) {
+    if (!(req && req.nome && req.nome.trim())) return { ok: false, erro: 'Informe o nome.' };
+    if (!cpfFormatoValido(req.cpf)) return { ok: false, erro: 'CPF deve ter 11 dígitos (000.000.000-00).' };
+    if (!emailValido(req.email)) return { ok: false, erro: 'Informe um e-mail válido.' };
+    var d = get();
+    if (d.representantes.some(function (r) { return digits(r.cpf) === digits(req.cpf); })) {
+      return { ok: false, erro: 'Já existe um representante com este CPF.' };
+    }
+    var empresa = garantirEmpresa();
+    var rep = {
+      id: uid('rep'),
+      nome: req.nome.trim(),
+      cpf: formatCpf(req.cpf),
+      email: req.email.trim(),
+      status: 'pendente',
+      senhaCriada: false,
+      convidadoEm: new Date().toISOString(),
+      aceitoEm: null
+    };
+    d.representantes.push(rep);
+    criarEmailConvite(d, rep, empresa);
+    save(d);
+    return { ok: true, rep: rep };
+  }
+
+  function listarRepresentantes() { return get().representantes; }
+  function getRepresentante(id) { return get().representantes.filter(function (r) { return r.id === id; })[0] || null; }
+  function getRepresentantePorCpf(cpf) {
+    var c = digits(cpf);
+    return get().representantes.filter(function (r) { return digits(r.cpf) === c; })[0] || null;
+  }
+  function removerRepresentante(id) {
+    var d = get();
+    d.representantes = d.representantes.filter(function (r) { return r.id !== id; });
+    d.emails = d.emails.filter(function (m) { return m.repId !== id; });
+    save(d);
+    return d.representantes;
+  }
+  function aceitarConvitePorCpf(cpf) {
+    var d = get();
+    var r = d.representantes.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
+    if (r) { r.status = 'aceito'; r.aceitoEm = new Date().toISOString(); }
+    d.emails.forEach(function (m) { if (digits(m.cpf) === digits(cpf)) m.status = 'lido'; });
+    save(d);
+    return r;
+  }
+
+  /* ---------- Caixa de e-mails ---------- */
+  function listarEmails() { return get().emails.slice().reverse(); } // mais recentes primeiro
+  function getEmail(id) { return get().emails.filter(function (m) { return m.id === id; })[0] || null; }
+  function marcarEmailLido(id) {
+    var d = get();
+    var m = d.emails.filter(function (x) { return x.id === id; })[0];
+    if (m) { m.status = 'lido'; save(d); }
+    return m;
+  }
+
+  /* ---------- Compatibilidade com o chat (solicitações/aprovação) ---------- */
   function criarSolicitacaoAcesso(req) {
     var d = get();
     var now = new Date();
     var item = {
-      id: 'req_' + now.getTime() + '_' + Math.floor(Math.random() * 1000),
+      id: uid('req'),
       nome: req.nome || 'Representante',
-      cpf: req.cpf || '',
+      cpf: formatCpf(req.cpf) || (req.cpf || ''),
       cnpj: req.cnpj || '',
       empresa: req.empresa || '',
       email: req.email || (slug(req.nome) + '@empresa.com.br'),
@@ -55,26 +187,16 @@
     save(d);
     return item;
   }
-
   function listarSolicitacoes() { return get().solicitacoes; }
-  function listarSolicitacoesPendentes() {
-    return get().solicitacoes.filter(function (s) { return s.status === 'pendente'; });
-  }
-  function getSolicitacao(id) {
-    return get().solicitacoes.filter(function (s) { return s.id === id; })[0] || null;
-  }
-
+  function listarSolicitacoesPendentes() { return get().solicitacoes.filter(function (s) { return s.status === 'pendente'; }); }
+  function getSolicitacao(id) { return get().solicitacoes.filter(function (s) { return s.id === id; })[0] || null; }
   function addAutorizado(d, rep) {
     var c = digits(rep.cpf);
     if (!c) return;
     if (!d.autorizados.some(function (a) { return digits(a.cpf) === c; })) {
-      d.autorizados.push({
-        cpf: rep.cpf, nome: rep.nome || '', cnpj: rep.cnpj || '', empresa: rep.empresa || '',
-        autorizadoEm: new Date().toISOString(), senhaCriada: false
-      });
+      d.autorizados.push({ cpf: rep.cpf, nome: rep.nome || '', cnpj: rep.cnpj || '', empresa: rep.empresa || '', autorizadoEm: new Date().toISOString(), senhaCriada: false });
     }
   }
-
   function aprovarSolicitacao(id) {
     var d = get();
     var s = d.solicitacoes.filter(function (x) { return x.id === id; })[0];
@@ -90,19 +212,12 @@
     if (s) { s.status = 'recusado'; save(d); }
     return s;
   }
-
-  function adicionarRepresentantes(lista, ctx) {
-    var d = get();
-    (lista || []).forEach(function (r) {
-      addAutorizado(d, { cpf: r.cpf, nome: r.nome, cnpj: (ctx && ctx.cnpj) || '', empresa: (ctx && ctx.empresa) || '' });
-    });
-    save(d);
-    return d.autorizados;
-  }
-
   function estaAutorizado(cpf) {
     var c = digits(cpf);
-    return !!c && get().autorizados.some(function (a) { return digits(a.cpf) === c; });
+    if (!c) return false;
+    var d = get();
+    return d.autorizados.some(function (a) { return digits(a.cpf) === c; }) ||
+      d.representantes.some(function (r) { return digits(r.cpf) === c && r.status === 'aceito'; });
   }
   function getAutorizado(cpf) {
     var c = digits(cpf);
@@ -111,13 +226,16 @@
   function marcarSenhaCriada(cpf) {
     var d = get();
     var a = d.autorizados.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
-    if (a) { a.senhaCriada = true; save(d); }
-    return a;
+    if (a) a.senhaCriada = true;
+    var r = d.representantes.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
+    if (r) { r.senhaCriada = true; if (r.status === 'pendente') { r.status = 'aceito'; r.aceitoEm = new Date().toISOString(); } }
+    save(d);
+    return r || a;
   }
 
   function resetar() { localStorage.removeItem(KEY); }
 
-  // Botão flutuante para resetar os dados durante a demonstração
+  /* ---------- Botão flutuante de reset (demo) ---------- */
   function injectResetButton() {
     if (document.getElementById('sislog-reset-proto')) return;
     var b = document.createElement('button');
@@ -135,25 +253,26 @@
     });
     document.body.appendChild(b);
   }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', injectResetButton);
-  } else {
-    injectResetButton();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectResetButton);
+  else injectResetButton();
 
   window.SislogDB = {
-    criarSolicitacaoAcesso: criarSolicitacaoAcesso,
-    listarSolicitacoes: listarSolicitacoes,
-    listarSolicitacoesPendentes: listarSolicitacoesPendentes,
-    getSolicitacao: getSolicitacao,
-    aprovarSolicitacao: aprovarSolicitacao,
-    recusarSolicitacao: recusarSolicitacao,
-    adicionarRepresentantes: adicionarRepresentantes,
-    estaAutorizado: estaAutorizado,
-    getAutorizado: getAutorizado,
-    marcarSenhaCriada: marcarSenhaCriada,
-    resetar: resetar,
-    maskEmail: maskEmail,
-    maskCpf: maskCpf
+    // empresa
+    garantirEmpresa: garantirEmpresa, getEmpresa: getEmpresa, gerarEmpresa: gerarEmpresa,
+    // representantes
+    adicionarRepresentante: adicionarRepresentante, listarRepresentantes: listarRepresentantes,
+    getRepresentante: getRepresentante, getRepresentantePorCpf: getRepresentantePorCpf,
+    removerRepresentante: removerRepresentante, aceitarConvitePorCpf: aceitarConvitePorCpf,
+    // e-mails
+    listarEmails: listarEmails, getEmail: getEmail, marcarEmailLido: marcarEmailLido,
+    // chat (compat)
+    criarSolicitacaoAcesso: criarSolicitacaoAcesso, listarSolicitacoes: listarSolicitacoes,
+    listarSolicitacoesPendentes: listarSolicitacoesPendentes, getSolicitacao: getSolicitacao,
+    aprovarSolicitacao: aprovarSolicitacao, recusarSolicitacao: recusarSolicitacao,
+    estaAutorizado: estaAutorizado, getAutorizado: getAutorizado, marcarSenhaCriada: marcarSenhaCriada,
+    // util
+    resetar: resetar, maskEmail: maskEmail, maskCpf: maskCpf,
+    formatCpf: formatCpf, formatCnpj: formatCnpj,
+    cpfFormatoValido: cpfFormatoValido, cnpjFormatoValido: cnpjFormatoValido, emailValido: emailValido
   };
 })();

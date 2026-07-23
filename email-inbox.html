@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Caixa de e-mails (protótipo) — convites SISLOG">
+  <title>SISLOG — Caixa de e-mails</title>
+  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="minimals.css?v=2">
+  <style>
+    /* Cliente de e-mail (3 painéis) — layout genérico de webmail, tokens Minimals */
+    .mail-app { display: grid; grid-template-columns: 210px 340px 1fr; height: 620px; border: 1px solid var(--mnl-divider); border-radius: var(--mnl-radius); overflow: hidden; background: var(--mnl-paper); box-shadow: var(--mnl-shadow-card); }
+
+    /* Barra de pastas */
+    .mail-nav { display: flex; flex-direction: column; gap: 4px; padding: 16px 12px; background: var(--mnl-grey-100); border-right: 1px solid var(--mnl-divider); }
+    .mail-compose { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; margin-bottom: 10px; border: 0; border-radius: var(--mnl-radius-sm); background: var(--mnl-primary); color: #fff; font: 700 14px 'Public Sans', sans-serif; box-shadow: var(--mnl-shadow-primary); cursor: default; }
+    .mail-folder { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 8px; color: var(--mnl-text-secondary); font-size: 14px; font-weight: 600; cursor: pointer; }
+    .mail-folder i { width: 18px; text-align: center; }
+    .mail-folder .badge { margin-left: auto; font-size: 12px; font-weight: 700; background: var(--mnl-primary-lighter); color: var(--mnl-primary-darker); padding: 1px 8px; border-radius: 999px; }
+    .mail-folder:hover { background: rgba(145,158,171,.12); }
+    .mail-folder.active { background: var(--mnl-primary-lighter); color: var(--mnl-primary-darker); }
+
+    /* Lista de mensagens */
+    .mail-list { display: flex; flex-direction: column; border-right: 1px solid var(--mnl-divider); min-height: 0; }
+    .mail-toolbar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--mnl-divider); }
+    .mail-search { flex: 1; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border: 1px solid var(--mnl-divider); border-radius: 8px; color: var(--mnl-text-disabled); }
+    .mail-search input { flex: 1; border: 0; outline: 0; background: transparent; font: inherit; font-size: 14px; color: var(--mnl-text-primary); }
+    .mail-tool-btn { display: grid; place-items: center; width: 38px; height: 38px; border: 0; border-radius: 8px; background: transparent; color: var(--mnl-text-secondary); cursor: pointer; }
+    .mail-tool-btn:hover { background: rgba(145,158,171,.12); }
+    .mail-items { overflow-y: auto; }
+    .mail-item { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--mnl-divider); cursor: pointer; border-left: 3px solid transparent; transition: background .15s; }
+    .mail-item:hover { background: var(--mnl-grey-100); }
+    .mail-item.active { background: var(--mnl-primary-lighter); border-left-color: var(--mnl-primary); }
+    .mail-item .grow { flex: 1; min-width: 0; }
+    .mail-item .row1 { display: flex; align-items: center; gap: 8px; }
+    .mail-from { font-size: 14px; font-weight: 700; color: var(--mnl-text-primary); }
+    .mail-time { margin-left: auto; font-size: 12px; color: var(--mnl-text-disabled); flex: none; }
+    .mail-subject { margin-top: 2px; font-size: 13.5px; color: var(--mnl-text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mail-preview { margin-top: 2px; font-size: 12.5px; color: var(--mnl-text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mail-item.unread .mail-subject { font-weight: 700; }
+    .mail-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mnl-primary); flex: none; align-self: center; }
+
+    /* Painel de leitura */
+    .mail-read { padding: 26px 28px; overflow-y: auto; }
+    .mail-read-head { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+    .mail-read-meta .name { font-size: 15px; font-weight: 700; }
+    .mail-read-meta .to { font-size: 13px; color: var(--mnl-text-secondary); }
+    .mail-empty { display: grid; place-items: center; height: 100%; color: var(--mnl-text-disabled); font-size: 14px; text-align: center; }
+
+    @media (max-width: 920px) {
+      .mail-app { grid-template-columns: 1fr; height: auto; }
+      .mail-nav { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--mnl-divider); }
+      .mail-compose { display: none; }
+      .mail-list { border-right: 0; border-bottom: 1px solid var(--mnl-divider); max-height: 320px; }
+    }
+  </style>
+</head>
+<body data-page="fornecedores">
+  <div data-include="header"></div>
+
+  <main class="mnl">
+    <section class="page-section" style="padding-top: 30px;">
+      <div class="container" style="max-width: 1120px;">
+        <nav class="breadcrumb left">
+          <a href="index.html">Página Inicial</a><span>•</span>
+          <span class="current">Caixa de e-mails</span>
+        </nav>
+
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px;">
+          <div>
+            <p class="mnl-overline">Protótipo · caixa única</p>
+            <h1 class="mnl-card-title" style="font-size:24px;">Caixa de entrada</h1>
+            <p class="mnl-card-subtitle">Todos os convites enviados aos representantes chegam aqui.</p>
+          </div>
+          <a class="mnl-btn outlined sm" href="representantes-lote.html"><i class="fa-solid fa-arrow-left"></i> Painel do sócio</a>
+        </div>
+
+        <div class="mail-app">
+          <!-- Pastas -->
+          <aside class="mail-nav">
+            <button type="button" class="mail-compose"><i class="fa-solid fa-pen"></i> Nova mensagem</button>
+            <div class="mail-folder active"><i class="fa-solid fa-inbox"></i> Caixa de entrada <span class="badge" id="folderCount">0</span></div>
+            <div class="mail-folder"><i class="fa-solid fa-paper-plane"></i> Enviados</div>
+            <div class="mail-folder"><i class="fa-regular fa-file-lines"></i> Rascunhos</div>
+            <div class="mail-folder"><i class="fa-regular fa-star"></i> Com estrela</div>
+            <div class="mail-folder"><i class="fa-regular fa-trash-can"></i> Lixeira</div>
+          </aside>
+
+          <!-- Lista -->
+          <div class="mail-list">
+            <div class="mail-toolbar">
+              <div class="mail-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Pesquisar" id="mailSearch"></div>
+              <button type="button" class="mail-tool-btn" id="refreshBtn" title="Atualizar"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            <div class="mail-items" id="mailItems"></div>
+          </div>
+
+          <!-- Leitura -->
+          <div class="mail-read" id="mailRead">
+            <div class="mail-empty">Selecione uma mensagem para ler.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div data-include="footer" id="rodape"></div>
+  <script src="app.js?v=2"></script>
+  <script src="db.js?v=2"></script>
+  <script>
+    (function () {
+      var DB = window.SislogDB;
+      var itemsEl = document.getElementById('mailItems');
+      var readEl = document.getElementById('mailRead');
+      var searchEl = document.getElementById('mailSearch');
+      var folderCount = document.getElementById('folderCount');
+      var activeId = null;
+
+      function digits(s) { return (s || '').replace(/\D/g, ''); }
+      function initials(nome) { var p = (nome || 'S').trim().split(/\s+/); return ((p[0] || '').charAt(0) + (p[1] || '').charAt(0)).toUpperCase() || 'S'; }
+
+      function renderList() {
+        var q = (searchEl.value || '').toLowerCase();
+        var mails = DB.listarEmails().filter(function (m) {
+          return !q || (m.assunto + ' ' + m.para + ' ' + m.nome).toLowerCase().indexOf(q) >= 0;
+        });
+        var naoLidos = DB.listarEmails().filter(function (m) { return m.status === 'nao_lido'; }).length;
+        folderCount.textContent = String(naoLidos);
+        if (!mails.length) { itemsEl.innerHTML = '<div class="mail-empty" style="padding:40px 20px;">Nenhuma mensagem.<br>Convide um representante no painel do sócio.</div>'; return; }
+        itemsEl.innerHTML = mails.map(function (m) {
+          var unread = m.status === 'nao_lido';
+          return '<div class="mail-item ' + (unread ? 'unread ' : '') + (m.id === activeId ? 'active' : '') + '" data-id="' + m.id + '">' +
+            '<span class="mnl-avatar" style="width:40px;height:40px;font-size:14px;">SI</span>' +
+            '<div class="grow"><div class="row1"><span class="mail-from">SISLOG</span>' +
+            (unread ? '<span class="mail-dot"></span>' : '') + '<span class="mail-time">' + m.hora + '</span></div>' +
+            '<div class="mail-subject">' + m.assunto + '</div>' +
+            '<div class="mail-preview">Para: ' + m.para + '</div></div></div>';
+        }).join('');
+        Array.prototype.forEach.call(itemsEl.querySelectorAll('.mail-item'), function (it) {
+          it.addEventListener('click', function () { open(it.getAttribute('data-id')); });
+        });
+      }
+
+      function open(id) {
+        activeId = id;
+        DB.marcarEmailLido(id);
+        var m = DB.getEmail(id);
+        renderList();
+        if (!m) return;
+        var rep = DB.getRepresentantePorCpf(m.cpf);
+        var aceito = rep && rep.status === 'aceito';
+        readEl.innerHTML =
+          '<div class="mail-read-head"><span class="mnl-avatar">SI</span>' +
+          '<div class="mail-read-meta"><div class="name">SISLOG &lt;nao-responder@sislog.go.gov.br&gt;</div>' +
+          '<div class="to">Para: ' + m.para + ' · ' + m.data + ' às ' + m.hora + '</div></div></div>' +
+          '<h2 class="mnl-card-title" style="font-size:20px; margin:0 0 14px;">' + m.assunto + '</h2>' +
+          '<hr class="mnl-divider dashed">' +
+          '<p style="font-size:15px; line-height:1.75; color:var(--mnl-text-primary);">' + m.corpo + '</p>' +
+          '<div class="mnl-alert info" style="margin:18px 0;"><i class="fa-solid fa-user-tag"></i>' +
+          '<span>Convite para: <strong>' + m.nome + '</strong> · CPF ' + DB.maskCpf(m.cpf) + '</span></div>' +
+          '<div class="mnl-btn-row">' +
+          (aceito
+            ? '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Convite já aceito</span>' +
+              '<a class="mnl-btn outlined" href="painel-representante.html?cpf=' + encodeURIComponent(digits(m.cpf)) + '"><i class="fa-solid fa-eye"></i> Ver painel do representante</a>'
+            : '<button type="button" class="mnl-btn primary" id="aceitarBtn"><i class="fa-solid fa-check"></i> Aceitar convite</button>') +
+          '</div>';
+        var btn = document.getElementById('aceitarBtn');
+        if (btn) btn.addEventListener('click', function () {
+          DB.aceitarConvitePorCpf(m.cpf);
+          location.href = 'cadastro-senha.html?cpf=' + encodeURIComponent(digits(m.cpf));
+        });
+      }
+
+      searchEl.addEventListener('input', renderList);
+      document.getElementById('refreshBtn').addEventListener('click', renderList);
+      renderList();
+    })();
+  </script>
+</body>
+</html>

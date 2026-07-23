@@ -57,7 +57,7 @@
 
   <div data-include="footer" id="rodape"></div>
   <script src="app.js?v=2"></script>
-  <script src="db.js?v=1"></script>
+  <script src="db.js?v=2"></script>
   <script>
     (function () {
       var DB = window.SislogDB;
@@ -85,6 +85,14 @@
         msg.textContent = '✅ Senha cadastrada com sucesso! Você já pode acessar o SISLOG.';
         msg.classList.add('ok');
         form.querySelector('.senha-submit').disabled = true;
+        if (cpfParam) {
+          var go = document.createElement('a');
+          go.className = 'portal-button';
+          go.style.cssText = 'display:inline-flex; margin-top:14px; text-decoration:none;';
+          go.href = 'painel-representante.html?cpf=' + encodeURIComponent(cpfParam);
+          go.textContent = 'Ir para o painel do representante →';
+          form.appendChild(go);
+        }
       });
     })();
   </script>
