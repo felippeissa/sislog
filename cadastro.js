@@ -17,7 +17,7 @@
     function isSim(v) { return /^sim$/i.test((v || '').trim()); }
     // Mensagem exibida nos pontos que exigem login no ID Goiás.
     // O nó 'auth' abre a tela do ID Goiás em nova aba e aguarda a autenticação.
-    var AUTH_MSG = 'Para continuar precisamos que você realize o login com o ID Goiás...';
+    var AUTH_MSG = 'Para prosseguir com o cadastro, faça o login utilizando sua conta do ID Goiás.';
 
     // Dados capturados durante a conversa (nome, CPF, CNPJ) para o "servidor" (db.js).
     var session = {};
@@ -27,102 +27,111 @@
     var NODES = {
       // --- Início ---
       start: { bot: [
-        { text: 'Olá! Bem-vindo ao cadastro de fornecedores do SISLOG. Vou te ajudar a realizar seu cadastro.' }
+        { text: 'Olá! Seja bem-vindo ao Cadastro de Fornecedores do SISLOG. Vou auxiliar você durante todo o processo de cadastro.' }
       ], next: 'novo_cadastro' },
 
       // Novo cadastro?
-      novo_cadastro: { bot: [ { text: 'Este é um novo cadastro?' } ],
+      novo_cadastro: { bot: [ { text: 'Você deseja realizar um novo cadastro de fornecedor?' } ],
         input: { type: 'choice', options: ['Sim', 'Não'], placeholder: 'Sim ou Não',
           route: function (v) { return isSim(v) ? 'is_socio' : 'solicita_doc'; } } },
 
       // Novo cadastro? Não -> Solicita CPF/CNPJ -> Recupera cadastro iniciado
-      solicita_doc: { bot: [ { text: 'Informe seu CPF ou CNPJ para localizarmos o cadastro já iniciado.' } ],
-        input: { type: 'text', placeholder: 'Digite o CPF ou CNPJ...', route: function () { return 'recupera'; } } },
-      recupera: { bot: [ { text: 'Recuperando o cadastro iniciado...' } ], next: 'is_socio' },
+      solicita_doc: { bot: [ { text: 'Sem problemas! Para localizarmos o seu cadastro em andamento, informe o seu CPF ou o CNPJ da empresa.' } ],
+        input: { type: 'text', placeholder: 'Informe o CPF ou o CNPJ...', route: function () { return 'recupera'; } } },
+      recupera: { bot: [ { text: 'Estamos recuperando o seu cadastro em andamento...' } ], next: 'is_socio' },
 
-      // É sócio?
-      is_socio: { bot: [ { text: 'Você é sócio da empresa?' } ],
+      // É sócio/administrador?
+      is_socio: { bot: [ { text: 'Você é sócio ou administrador da empresa?' } ],
         input: { type: 'choice', options: ['Sim', 'Não'], placeholder: 'Sim ou Não',
           route: function (v) { return isSim(v) ? 'informar_documentos' : 'is_representante'; } } },
 
       // É sócio? Sim -> Informar CNPJ/dados -> Login ID Goiás -> Segue cadastro e aprovação -> Cadastro realizado
-      informar_documentos: { bot: [ { text: 'Informe os documentos da empresa (CNPJ, CPF).' } ],
+      informar_documentos: { bot: [ { text: 'Para iniciarmos a validação, anexe os documentos da empresa (CNPJ e CPF).' } ],
         input: { type: 'file', attachLabel: 'Documentos.pdf', placeholder: 'Anexe os documentos (📎) ou digite o nome do arquivo',
           route: function () { return 'auth_documentos'; } } },
       auth_documentos: { bot: [ { text: AUTH_MSG } ], auth: 'segue_aprovacao' },
-      segue_aprovacao: { bot: [ { text: 'Seguindo com o cadastro e aprovação...' } ], next: 'fim_realizado' },
+      segue_aprovacao: { bot: [ { text: 'Estamos processando o seu cadastro. Um instante, por favor...' } ], next: 'fim_realizado' },
       fim_realizado: { bot: [
-        { text: '✅ Cadastro realizado com sucesso! Você já pode participar das licitações do Estado de Goiás.' },
-        { text: 'Agora você já pode cadastrar uma senha de acesso ao SISLOG.' }
-      ], end: true, actions: [ { label: 'Cadastrar senha', href: 'cadastro-senha.html', newTab: true } ] },
+        { text: '🎉 Cadastro concluído com sucesso! Sua empresa já está cadastrada para participar dos processos de contratação realizados pelo Estado de Goiás por meio do SISLOG.' },
+        { text: 'Clique no botão abaixo para gerar a sua senha de acesso.' }
+      ], end: true, actions: [ { label: 'Gerar senha de acesso', href: 'cadastro-senha.html', newTab: true } ] },
 
       // É representante?
-      is_representante: { bot: [ { text: 'Você é representante da empresa?' } ],
+      is_representante: { bot: [ { text: 'Você é o representante legal da empresa?' } ],
         input: { type: 'choice', options: ['Sim', 'Não'], placeholder: 'Sim ou Não',
           route: function (v) { return isSim(v) ? 'tem_procuracao' : 'recusa'; } } },
 
       // É representante? Não -> Recusa cadastro -> Encerra interação -> Cadastro não realizado
-      recusa: { bot: [ { text: 'Recusando o cadastro.' }, { text: 'Encerrando a interação.' } ], next: 'fim_nao_realizado' },
-      fim_nao_realizado: { bot: [ { text: '❌ Cadastro não realizado.' } ], end: true },
+      recusa: { bot: [
+        { text: 'Para realizar o cadastro, é necessário ser sócio, administrador ou representante legal da empresa.' },
+        { text: 'Por isso, não será possível prosseguir por aqui. Estamos encerrando o atendimento.' }
+      ], next: 'fim_nao_realizado' },
+      fim_nao_realizado: { bot: [ { text: 'Cadastro não concluído. Se precisar, você pode iniciar um novo atendimento a qualquer momento.' } ], end: true },
 
       // Tem procuração?
-      tem_procuracao: { bot: [ { text: 'Você possui procuração que lhe dá poderes para representar a empresa?' } ],
+      tem_procuracao: { bot: [ { text: 'Você possui uma procuração válida que lhe concede poderes para representar a empresa?' } ],
         input: { type: 'choice', options: ['Sim', 'Não'], placeholder: 'Sim ou Não',
           route: function (v) { return isSim(v) ? 'auth_procuracao' : 'solicita_nome'; } } },
 
       // Tem procuração? Sim -> Login ID Goiás -> Upload -> IA avalia -> Procuração OK?
       auth_procuracao: { bot: [ { text: AUTH_MSG } ], auth: 'upload_procuracao' },
-      upload_procuracao: { bot: [ { text: 'Faça o upload da procuração.' } ],
+      upload_procuracao: { bot: [ { text: 'Anexe a procuração que comprova seus poderes de representação da empresa.' } ],
         input: { type: 'file', attachLabel: PROC_OK, placeholder: 'Anexe a procuração (📎) ou digite o nome do arquivo',
           route: function (v) { return v.trim().toLowerCase() === PROC_OK ? 'ia_avalia_ok' : 'ia_avalia_nok'; } } },
-      ia_avalia_ok: { bot: [ { text: 'IA avaliando a procuração...' }, { text: 'Procuração validada com sucesso.' } ], next: 'segue_cadastro' },
-      ia_avalia_nok: { bot: [ { text: 'IA avaliando a procuração...' }, { text: 'Não foi possível validar a procuração automaticamente.' } ], next: 'cadfor' },
-      segue_cadastro: { bot: [ { text: 'Seguindo com o cadastro...' } ], next: 'fim_completa' },
+      ia_avalia_ok: { bot: [ { text: 'Analisando a procuração...' }, { text: 'Procuração validada com sucesso!' } ], next: 'segue_cadastro' },
+      ia_avalia_nok: { bot: [ { text: 'Validando o documento enviado...' }, { text: 'Não foi possível validar a procuração automaticamente.' } ], next: 'cadfor' },
+      segue_cadastro: { bot: [ { text: 'Estamos concluindo o seu cadastro. Um instante, por favor...' } ], next: 'fim_completa' },
       fim_completa: { bot: [
-        { text: '✅ Cadastro realizado com sucesso! Você já pode participar das licitações do Estado de Goiás.' },
-        { text: 'Agora você já pode cadastrar uma senha de acesso ao SISLOG.' }
-      ], end: true, actions: [ { label: 'Cadastrar senha', href: 'cadastro-senha.html', newTab: true } ] },
-      cadfor: { bot: [ { text: 'Direcionando para o CADFOR Backoffice.' } ], next: 'fim_avaliacao' },
-      fim_avaliacao: { bot: [ { text: '⚠️ Cadastro em avaliação. Sua procuração será analisada manualmente.' } ], end: true },
+        { text: '🎉 Cadastro concluído com sucesso! Sua empresa já está cadastrada para participar dos processos de contratação realizados pelo Estado de Goiás por meio do SISLOG.' },
+        { text: 'Clique no botão abaixo para gerar a sua senha de acesso.' }
+      ], end: true, actions: [ { label: 'Gerar senha de acesso', href: 'cadastro-senha.html', newTab: true } ] },
+      cadfor: { bot: [ { text: 'Estamos encaminhando a sua procuração para análise da equipe do CADFOR.' } ], next: 'fim_avaliacao' },
+      fim_avaliacao: { bot: [ { text: 'Seu cadastro está em análise. Assim que a procuração for avaliada, você será informado por e-mail.' } ], end: true },
 
       // Tem procuração? Não -> coleta dados do representante -> cria solicitação no "servidor" (db)
       // -> e-mail (mascarado) ao sócio administrador -> Cadastro pendente
-      solicita_nome: { bot: [ { text: 'Vamos registrar sua solicitação de acesso para o sócio administrador aprovar.' }, { text: 'Qual é o seu nome completo?' } ],
-        input: { type: 'text', placeholder: 'Digite seu nome...', route: function (v) { session.nome = v; return 'solicita_cpf'; } } },
-      solicita_cpf: { bot: [ { text: 'Informe o seu CPF.' } ],
-        input: { type: 'text', placeholder: 'Digite seu CPF...', route: function (v) { session.cpf = v; return 'solicita_cnpj'; } } },
-      solicita_cnpj: { bot: [ { text: 'Informe o CNPJ da empresa.' } ],
-        input: { type: 'text', placeholder: 'Digite o CNPJ...', route: function (v) { session.cnpj = v; return 'cria_solicitacao'; } } },
+      solicita_nome: { bot: [ { text: 'Para registrarmos a sua solicitação de acesso, informe o seu nome completo.' } ],
+        input: { type: 'text', placeholder: 'Informe o seu nome completo...', route: function (v) { session.nome = v; return 'solicita_cpf'; } } },
+      solicita_cpf: { bot: [ { text: 'Para iniciar a validação, informe o CPF do representante legal.' } ],
+        input: { type: 'text', mask: 'cpf', placeholder: 'Informe o CPF (000.000.000-00)...',
+          validate: function (v) { return DB ? DB.cpfFormatoValido(v) : true; },
+          erro: 'CPF inválido. Informe no formato 000.000.000-00 (11 dígitos).',
+          route: function (v) { session.cpf = v; return 'solicita_cnpj'; } } },
+      solicita_cnpj: { bot: [ { text: 'Agora informe o CNPJ da empresa.' } ],
+        input: { type: 'text', mask: 'cnpj', placeholder: 'Informe o CNPJ (00.000.000/0000-00)...',
+          validate: function (v) { return DB ? DB.cnpjFormatoValido(v) : true; },
+          erro: 'CNPJ inválido. Informe no formato 00.000.000/0000-00 (14 dígitos).',
+          route: function (v) { session.cnpj = v; return 'cria_solicitacao'; } } },
       cria_solicitacao: {
         onEnter: function () { if (DB) session.req = DB.criarSolicitacaoRepresentante({ nome: session.nome, cpf: session.cpf, cnpj: session.cnpj }); },
         bot: function () {
-          var req = session.req || {};
-          var email = DB ? DB.maskEmail(req.email) : 's****@empresa.com.br';
-          var cpf = DB ? DB.maskCpf(req.cpf || session.cpf) : (session.cpf || '');
+          var socio = DB ? DB.maskEmail(DB.emailSocio()) : 's****@empresa.com.br';
           return [
-            { text: 'Enviamos um e-mail ao sócio administrador (' + email + ') para aprovar o seu acesso.' },
-            { text: 'Dados enviados para aprovação: ' + (req.nome || session.nome) + ' · CPF ' + cpf + ' · CNPJ ' + (req.cnpj || session.cnpj) + '.' }
+            { text: 'Identificamos que o acesso depende da aprovação do sócio administrador.' },
+            { text: 'Enviamos uma solicitação para o e-mail ' + socio + '. Após a aprovação, você poderá concluir o cadastro.' }
           ];
         },
         next: 'fim_pendente'
       },
       fim_pendente: { bot: [
-        { text: '🟡 Cadastro pendente. Aguarde a aprovação do sócio administrador.' },
-        { text: 'Assim que ele aprovar, você receberá um e-mail para criar a sua senha de acesso.' }
-      ], end: true, actions: [ { label: 'Já tenho aprovação — continuar', to: 'retomada_start' } ] },
+        { text: 'Assim que o sócio administrador aprovar, você receberá um e-mail para gerar a sua senha de acesso.' }
+      ], end: true, actions: [ { label: 'Já fui aprovado — continuar', to: 'retomada_start' } ] },
 
       // ================= 2º fluxo: Continuar cadastro (checagem AUTOMÁTICA da aprovação) =================
-      retomada_start: { bot: [ { text: 'Vamos continuar o seu cadastro.' }, { text: 'Informe o seu CPF.' } ],
-        input: { type: 'text', placeholder: 'Digite seu CPF...', route: function (v) { session.cpf = v; return 'retomada_check'; } } },
-      retomada_check: { bot: [ { text: 'Verificando se o sócio administrador já aprovou o seu acesso...' } ],
+      retomada_start: { bot: [ { text: 'Vamos dar continuidade ao seu cadastro. Para localizarmos a sua solicitação, informe o seu CPF.' } ],
+        input: { type: 'text', mask: 'cpf', placeholder: 'Informe o CPF (000.000.000-00)...',
+          validate: function (v) { return DB ? DB.cpfFormatoValido(v) : true; },
+          erro: 'CPF inválido. Informe no formato 000.000.000-00 (11 dígitos).',
+          route: function (v) { session.cpf = v; return 'retomada_check'; } } },
+      retomada_check: { bot: [ { text: 'Estamos verificando a aprovação do sócio administrador...' } ],
         decide: function () { return (DB && DB.estaAutorizado(session.cpf)) ? 'retomada_aprovado' : 'retomada_pendente'; } },
       retomada_aprovado: { bot: [
-        { text: '✅ O sócio administrador já aprovou o seu acesso!' },
-        { text: 'Agora você já pode cadastrar uma senha de acesso ao SISLOG.' }
-      ], end: true, actions: [ { label: 'Cadastrar senha', href: 'cadastro-senha.html', newTab: true } ] },
+        { text: '🎉 O seu acesso foi aprovado pelo sócio administrador! Seu cadastro está concluído.' },
+        { text: 'Clique no botão abaixo para gerar a sua senha de acesso.' }
+      ], end: true, actions: [ { label: 'Gerar senha de acesso', href: 'cadastro-senha.html', newTab: true } ] },
       retomada_pendente: { bot: [
-        { text: '🟡 Ainda não há aprovação do sócio administrador para o seu CPF.' },
-        { text: 'Assim que ele aprovar, você receberá um e-mail para criar a sua senha.' }
+        { text: 'Ainda não identificamos a aprovação do sócio administrador para o seu CPF.' },
+        { text: 'Assim que ele aprovar, você receberá um e-mail para gerar a sua senha de acesso.' }
       ], end: true }
     };
 
@@ -224,6 +233,20 @@
     function submitUser(value, asFile) {
       if (!pending) return;
       var input = pending;
+      // Validação (ex.: CPF/CNPJ) — em caso de erro, mostra aviso e repete o passo
+      if (!asFile && input.validate && !input.validate(value)) {
+        pending = null;
+        setInputMode('off');
+        renderTurn('user', [ { text: value } ]);
+        text.value = '';
+        var t = showTyping();
+        setTimeout(function () {
+          t.remove();
+          renderTurn('bot', [ { text: input.erro || 'Valor inválido. Tente novamente.' } ]);
+          waitFor(input);
+        }, 600);
+        return;
+      }
       pending = null;
       clearQuick();
       setInputMode('off');
@@ -233,6 +256,13 @@
       var next = input.route ? input.route(value) : null;
       setTimeout(function () { if (next) goTo(next); }, 650);
     }
+
+    // Máscara automática enquanto digita (CPF/CNPJ)
+    text.addEventListener('input', function () {
+      if (!pending || !DB) return;
+      if (pending.mask === 'cpf') text.value = DB.formatCpf(text.value);
+      else if (pending.mask === 'cnpj') text.value = DB.formatCnpj(text.value);
+    });
 
     // ================= Login ID Goiás (nova aba + espera) =================
     function openAuth(nextId) {

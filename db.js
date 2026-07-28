@@ -16,8 +16,6 @@
   }
   function get() {
     var d = load();
-    if (!d.solicitacoes) d.solicitacoes = [];
-    if (!d.autorizados) d.autorizados = [];
     if (!d.representantes) d.representantes = [];
     if (!d.emails) d.emails = [];
     if (!('empresa' in d)) d.empresa = null;
@@ -108,9 +106,14 @@
     });
   }
 
+  function emailSocio(empresa) {
+    var e = empresa || getEmpresa() || garantirEmpresa();
+    return 'socio.admin@' + slug(e ? e.nomeFantasia : 'empresa') + '.com.br';
+  }
+
   function criarEmailSolicitacao(d, rep, empresa) {
     var t = agora();
-    var socioEmail = 'socio.admin@' + slug(empresa ? empresa.nomeFantasia : 'empresa') + '.com.br';
+    var socioEmail = emailSocio(empresa);
     d.emails.push({
       id: uid('mail'), tipo: 'solicitacao',
       para: socioEmail, nome: rep.nome, cpf: rep.cpf,
@@ -229,69 +232,18 @@
     return m;
   }
 
-  /* ---------- Compatibilidade com o chat (solicitações/aprovação) ---------- */
-  function criarSolicitacaoAcesso(req) {
-    var d = get();
-    var now = new Date();
-    var item = {
-      id: uid('req'),
-      nome: req.nome || 'Representante',
-      cpf: formatCpf(req.cpf) || (req.cpf || ''),
-      cnpj: req.cnpj || '',
-      empresa: req.empresa || '',
-      email: req.email || (slug(req.nome) + '@empresa.com.br'),
-      data: now.toLocaleDateString('pt-BR'),
-      hora: now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-      status: 'pendente'
-    };
-    d.solicitacoes.push(item);
-    save(d);
-    return item;
-  }
-  function listarSolicitacoes() { return get().solicitacoes; }
-  function listarSolicitacoesPendentes() { return get().solicitacoes.filter(function (s) { return s.status === 'pendente'; }); }
-  function getSolicitacao(id) { return get().solicitacoes.filter(function (s) { return s.id === id; })[0] || null; }
-  function addAutorizado(d, rep) {
-    var c = digits(rep.cpf);
-    if (!c) return;
-    if (!d.autorizados.some(function (a) { return digits(a.cpf) === c; })) {
-      d.autorizados.push({ cpf: rep.cpf, nome: rep.nome || '', cnpj: rep.cnpj || '', empresa: rep.empresa || '', autorizadoEm: new Date().toISOString(), senhaCriada: false });
-    }
-  }
-  function aprovarSolicitacao(id) {
-    var d = get();
-    var s = d.solicitacoes.filter(function (x) { return x.id === id; })[0];
-    if (!s) return null;
-    s.status = 'aprovado';
-    addAutorizado(d, { cpf: s.cpf, nome: s.nome, cnpj: s.cnpj, empresa: s.empresa });
-    save(d);
-    return s;
-  }
-  function recusarSolicitacao(id) {
-    var d = get();
-    var s = d.solicitacoes.filter(function (x) { return x.id === id; })[0];
-    if (s) { s.status = 'recusado'; save(d); }
-    return s;
-  }
+  /* ---------- Autorização (checagem do chat) ---------- */
   function estaAutorizado(cpf) {
     var c = digits(cpf);
     if (!c) return false;
-    var d = get();
-    return d.autorizados.some(function (a) { return digits(a.cpf) === c; }) ||
-      d.representantes.some(function (r) { return digits(r.cpf) === c && r.status === 'aceito'; });
-  }
-  function getAutorizado(cpf) {
-    var c = digits(cpf);
-    return get().autorizados.filter(function (a) { return digits(a.cpf) === c; })[0] || null;
+    return get().representantes.some(function (r) { return digits(r.cpf) === c && r.status === 'aceito'; });
   }
   function marcarSenhaCriada(cpf) {
     var d = get();
-    var a = d.autorizados.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
-    if (a) a.senhaCriada = true;
     var r = d.representantes.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
     if (r) { r.senhaCriada = true; if (r.status === 'pendente') { r.status = 'aceito'; r.aceitoEm = new Date().toISOString(); } }
     save(d);
-    return r || a;
+    return r;
   }
 
   function resetar() { localStorage.removeItem(KEY); }
@@ -319,7 +271,7 @@
 
   window.SislogDB = {
     // empresa
-    garantirEmpresa: garantirEmpresa, getEmpresa: getEmpresa, gerarEmpresa: gerarEmpresa,
+    garantirEmpresa: garantirEmpresa, getEmpresa: getEmpresa, gerarEmpresa: gerarEmpresa, emailSocio: emailSocio,
     // representantes
     adicionarRepresentante: adicionarRepresentante, listarRepresentantes: listarRepresentantes,
     getRepresentante: getRepresentante, getRepresentantePorCpf: getRepresentantePorCpf,
@@ -327,11 +279,8 @@
     criarSolicitacaoRepresentante: criarSolicitacaoRepresentante, aprovarRepresentantePorCpf: aprovarRepresentantePorCpf,
     // e-mails
     listarEmails: listarEmails, getEmail: getEmail, marcarEmailLido: marcarEmailLido,
-    // chat (compat)
-    criarSolicitacaoAcesso: criarSolicitacaoAcesso, listarSolicitacoes: listarSolicitacoes,
-    listarSolicitacoesPendentes: listarSolicitacoesPendentes, getSolicitacao: getSolicitacao,
-    aprovarSolicitacao: aprovarSolicitacao, recusarSolicitacao: recusarSolicitacao,
-    estaAutorizado: estaAutorizado, getAutorizado: getAutorizado, marcarSenhaCriada: marcarSenhaCriada,
+    // autorização (chat)
+    estaAutorizado: estaAutorizado, marcarSenhaCriada: marcarSenhaCriada,
     // util
     resetar: resetar, maskEmail: maskEmail, maskCpf: maskCpf,
     formatCpf: formatCpf, formatCnpj: formatCnpj,

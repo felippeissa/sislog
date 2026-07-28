@@ -1,16 +1,17 @@
 /* ============================================================
-   Minimals (docs.minimals.cc) — componentes replicados em CSS
-   para uso nas telas do SISLOG. Mantém a estrutura do SISLOG
-   (header/footer) e usa estes componentes no conteúdo.
+   Componentes no estilo Minimals (docs.minimals.cc), porém
+   ALINHADOS à identidade do SISLOG: fonte Inter e paleta verde
+   do portal (styles.css). Mantém a estrutura do SISLOG e usa
+   estes componentes no conteúdo das telas novas.
    ============================================================ */
-@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap');
 
 :root {
-  --mnl-primary-lighter: #C8FAD6;
-  --mnl-primary-light: #5BE49B;
-  --mnl-primary: #00A76F;
-  --mnl-primary-dark: #007867;
-  --mnl-primary-darker: #004B50;
+  /* Primário alinhado ao verde do SISLOG (styles.css --green-*) */
+  --mnl-primary-lighter: #dff8ef;   /* green-100 */
+  --mnl-primary-light: #a9ead6;      /* green-200 */
+  --mnl-primary: #07875e;            /* green-700 */
+  --mnl-primary-dark: #0b493b;       /* green-900 */
+  --mnl-primary-darker: #073d32;     /* green-950 */
 
   --mnl-text-primary: #1C252E;
   --mnl-text-secondary: #637381;
@@ -35,11 +36,19 @@
   --mnl-radius: 16px;
   --mnl-radius-sm: 8px;
   --mnl-shadow-card: 0 0 2px 0 rgba(145,158,171,.2), 0 12px 24px -4px rgba(145,158,171,.12);
-  --mnl-shadow-primary: 0 8px 16px 0 rgba(0,167,111,.24);
+  --mnl-shadow-primary: 0 8px 16px 0 rgba(8,173,118,.24);
 }
 
-.mnl { font-family: 'Public Sans', system-ui, sans-serif; color: var(--mnl-text-primary); }
+.mnl { font-family: Inter, system-ui, sans-serif; color: var(--mnl-text-primary); }
 .mnl * { box-sizing: border-box; }
+
+/* Acessibilidade: foco visível por teclado */
+.mnl a:focus-visible, .mnl button:focus-visible, .mnl input:focus-visible,
+.mnl [tabindex]:focus-visible, .mnl-item:focus-visible, .inbox-item:focus-visible {
+  outline: 2px solid var(--mnl-primary);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
 
 /* ---------- Card ---------- */
 .mnl-card { background: var(--mnl-paper); border-radius: var(--mnl-radius); box-shadow: var(--mnl-shadow-card); padding: 24px; }
