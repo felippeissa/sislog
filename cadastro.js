@@ -102,14 +102,29 @@
         input: { type: 'text', mask: 'cpf', placeholder: 'Informe o CPF (000.000.000-00)...',
           validate: function (v) { return DB ? DB.cpfFormatoValido(v) : true; },
           erro: 'CPF inválido. Informe no formato 000.000.000-00 (11 dígitos).',
-          route: function (v) { session.cpf = v; return 'solicita_cnpj'; } } },
+          route: function (v) { session.cpf = v; return 'solicita_email'; } } },
+      solicita_email: { bot: [ { text: 'Informe o seu e-mail.' } ],
+        input: { type: 'text', placeholder: 'email@exemplo.com',
+          validate: function (v) { return DB ? DB.emailValido(v) : true; },
+          erro: 'E-mail inválido. Informe um endereço no formato email@exemplo.com.',
+          route: function (v) { session.email = v; return 'solicita_cnpj'; } } },
       solicita_cnpj: { bot: [ { text: 'Informe o CNPJ da empresa.' } ],
         input: { type: 'text', mask: 'cnpj', placeholder: 'Informe o CNPJ (00.000.000/0000-00)...',
           validate: function (v) { return DB ? DB.cnpjFormatoValido(v) : true; },
           erro: 'CNPJ inválido. Informe no formato 00.000.000/0000-00 (14 dígitos).',
-          route: function (v) { session.cnpj = v; return 'cria_solicitacao'; } } },
+          route: function (v) { session.cnpj = v; return 'confirma_dados'; } } },
+      confirma_dados: {
+        bot: function () {
+          return [
+            { text: 'Confira seus dados antes de enviarmos ao sócio administrador da empresa:' },
+            { text: 'Nome: <strong>' + session.nome + '</strong><br>CPF: <strong>' + session.cpf +
+              '</strong><br>E-mail: <strong>' + session.email + '</strong><br>CNPJ: <strong>' + session.cnpj + '</strong>' }
+          ];
+        },
+        input: { type: 'choice', options: ['Confirmar e enviar', 'Corrigir dados'], placeholder: 'Confirmar ou corrigir',
+          route: function (v) { return /confirmar/i.test(v) ? 'cria_solicitacao' : 'solicita_nome'; } } },
       cria_solicitacao: {
-        onEnter: function () { if (DB) session.req = DB.criarSolicitacaoRepresentante({ nome: session.nome, cpf: session.cpf, cnpj: session.cnpj }); },
+        onEnter: function () { if (DB) session.req = DB.criarSolicitacaoRepresentante({ nome: session.nome, cpf: session.cpf, email: session.email, cnpj: session.cnpj }); },
         bot: function () {
           var socio = DB ? DB.maskEmail(DB.emailSocio()) : 's****@empresa.com.br';
           return [
@@ -121,7 +136,7 @@
       },
       fim_pendente: { bot: [
         { text: 'Assim que o sócio administrador aprovar sua solicitação, você receberá um e-mail para criar sua senha de acesso.' }
-      ], end: true, actions: [ { label: 'Já fui aprovado — continuar', to: 'retomada_start' } ] },
+      ], end: true },
 
       // ================= 2º fluxo: Continuar cadastro (checagem AUTOMÁTICA do status) =================
       retomada_start: { bot: [ { text: 'Vamos dar continuidade ao seu cadastro. Estamos verificando o andamento...' } ],
