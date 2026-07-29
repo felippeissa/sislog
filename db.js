@@ -353,7 +353,7 @@
 
     // Reflete a aprovação na lista de representantes, marcando o CADFOR como responsável.
     if (p.cpf && digits(p.cpf)) {
-      var aprovador = 'CADFOR · ' + (p.analista || 'Equipe CADFOR');
+      var aprovador = 'CADFOR - ' + (p.analista || 'Equipe CADFOR');
       var rep = d.representantes.filter(function (x) { return digits(x.cpf) === digits(p.cpf); })[0];
       if (rep) {
         rep.aprovadoPor = aprovador;
