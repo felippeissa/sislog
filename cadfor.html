@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="CADFOR — Análise de cadastros de fornecedores (SISLOG)">
+  <title>SISLOG — CADFOR (Análise de cadastros)</title>
+  <link rel="stylesheet" href="styles.css?v=5">
+  <link rel="stylesheet" href="minimals.css?v=5">
+  <style>
+    /* ---- Barra "Filtros de Busca" ---- */
+    .cadfor-filterbar { display:flex; align-items:center; gap:10px; padding:12px 18px; background:var(--mnl-grey-200); border:1px solid var(--mnl-divider); border-radius:10px 10px 0 0; color:var(--mnl-text-primary); font-weight:700; font-size:15px; }
+    .cadfor-filterbar .hint { font-weight:600; font-size:12.5px; color:var(--mnl-text-secondary); }
+    .cadfor-filterbar .toggle { display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#fff; border:1px solid var(--mnl-divider); color:var(--mnl-text-secondary); cursor:pointer; }
+    .cadfor-filterwrap { border:1px solid var(--mnl-divider); border-top:0; border-radius:0 0 10px 10px; padding:22px; }
+    .cadfor-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px 20px; }
+    .cadfor-grid .col-2 { grid-column:span 2; }
+    .cadfor-select { width:100%; height:54px; padding:0 14px; border:1px solid var(--mnl-divider); border-radius:var(--mnl-radius-sm); background:#fff; font:inherit; font-size:15px; color:var(--mnl-text-primary); appearance:none;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23919EAB' stroke-width='2'><path d='m6 9 6 6 6-6'/></svg>"); background-repeat:no-repeat; background-position:right 14px center; }
+    .cadfor-select:focus { outline:0; border-color:var(--mnl-primary); box-shadow:0 0 0 1px var(--mnl-primary); }
+    .cadfor-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+
+    /* ---- Chips de exportação ---- */
+    .cadfor-export { display:flex; gap:8px; margin:18px 0 10px; flex-wrap:wrap; }
+    .cadfor-export span { font-size:12.5px; font-weight:700; color:var(--mnl-primary-darker); background:var(--mnl-primary-lighter); padding:3px 10px; border-radius:6px; cursor:default; }
+
+    /* ---- Tabela ---- */
+    .cadfor-tablewrap { border:1px solid var(--mnl-divider); border-radius:12px; overflow-x:auto; }
+    .cadfor-grouphint { padding:12px 16px; background:var(--mnl-grey-100); border-bottom:1px solid var(--mnl-divider); font-size:13px; color:var(--mnl-text-secondary); }
+    table.cadfor-table { width:100%; min-width:920px; border-collapse:collapse; font-size:14px; }
+    .cadfor-table th { text-align:left; padding:14px 16px; background:#fff; color:var(--mnl-text-secondary); font-weight:700; font-size:13px; border-bottom:1px solid var(--mnl-divider); white-space:nowrap; }
+    .cadfor-table td { padding:14px 16px; border-bottom:1px solid var(--mnl-divider); vertical-align:middle; }
+    .cadfor-table tr:last-child td { border-bottom:0; }
+    .cadfor-table tbody tr:hover { background:var(--mnl-grey-100); }
+    .cadfor-table .codigo { font-weight:700; color:var(--mnl-text-primary); }
+    .cadfor-empty td { text-align:center; color:var(--mnl-text-disabled); padding:32px 16px; }
+    .cadfor-rowactions { display:flex; gap:6px; justify-content:flex-end; }
+    .cadfor-rowactions .mnl-iconbtn.analyze { color:var(--mnl-info-darker); }
+    .cadfor-rowactions .mnl-iconbtn.analyze:hover { color:var(--mnl-info-darker); background:rgba(0,184,217,.12); }
+    .mnl-chip.error { background:var(--mnl-error-lighter); color:var(--mnl-error-darker); }
+
+    .cadfor-footer { display:flex; align-items:center; justify-content:flex-end; gap:18px; padding:14px 4px 0; font-size:13px; color:var(--mnl-text-secondary); }
+
+    /* ---- Modal documento ---- */
+    .doc-overlay { position:fixed; inset:0; background:rgba(28,37,46,.55); display:none; align-items:center; justify-content:center; padding:24px; z-index:1000; }
+    .doc-overlay.open { display:flex; }
+    .doc-modal { width:min(680px,100%); max-height:88vh; overflow:auto; background:#fff; border-radius:16px; box-shadow:0 24px 48px rgba(0,0,0,.28); }
+    .doc-modal-head { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 22px; border-bottom:1px solid var(--mnl-divider); }
+    .doc-modal-head h3 { margin:0; font-size:17px; font-weight:700; }
+    .doc-close { display:grid; place-items:center; width:36px; height:36px; border:0; border-radius:8px; background:transparent; color:var(--mnl-text-secondary); cursor:pointer; font-size:18px; }
+    .doc-close:hover { background:rgba(145,158,171,.14); }
+    .doc-modal-body { padding:26px 30px; }
+    .doc-sheet { border:1px solid var(--mnl-divider); border-radius:10px; padding:30px 34px; background:var(--mnl-grey-100); }
+    .doc-sheet .doc-brand { display:flex; align-items:center; gap:10px; color:var(--mnl-primary-darker); font-weight:800; letter-spacing:.5px; }
+    .doc-sheet h4 { margin:18px 0 4px; font-size:16px; }
+    .doc-sheet p { margin:10px 0; font-size:13.5px; line-height:1.7; color:var(--mnl-text-secondary); }
+    .doc-sheet .line { height:10px; border-radius:4px; background:rgba(145,158,171,.25); margin:9px 0; }
+    .doc-sheet .line.w60 { width:60%; } .doc-sheet .line.w80 { width:80%; } .doc-sheet .line.w40 { width:40%; }
+    .doc-stamp { margin-top:22px; display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border:2px dashed var(--mnl-primary); color:var(--mnl-primary-darker); border-radius:8px; font-weight:700; transform:rotate(-4deg); }
+    .doc-modal-foot { display:flex; justify-content:flex-end; gap:10px; padding:16px 22px; border-top:1px solid var(--mnl-divider); }
+
+    @media (max-width:900px){ .cadfor-grid{ grid-template-columns:1fr 1fr; } .cadfor-grid .col-2{ grid-column:span 2; } }
+    @media (max-width:640px){ .cadfor-grid{ grid-template-columns:1fr; } .cadfor-grid .col-2{ grid-column:span 1; } .cadfor-tablewrap{ overflow-x:auto; } }
+  </style>
+</head>
+<body data-page="fornecedores">
+  <main class="mnl">
+    <section class="page-section" style="padding-top:30px;">
+      <div class="container" style="width:min(1600px, calc(100% - 48px)); max-width:none;">
+        <nav class="breadcrumb left">
+          <a href="index.html">Página Inicial</a><span>•</span>
+          <span class="current">CADFOR</span><span>•</span>
+          <span class="current">Análise de cadastros</span>
+        </nav>
+
+        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px;">
+          <div>
+            <p class="mnl-overline">CADFOR</p>
+            <h1 class="mnl-card-title" style="font-size:24px;">Análise de cadastros de fornecedores</h1>
+            <p class="mnl-card-subtitle">Pedidos enviados pelo chat que aguardam validação de um analista.</p>
+          </div>
+          <a class="mnl-btn outlined sm" href="email.html"><i class="fa-regular fa-envelope"></i> Caixa de e-mails</a>
+        </div>
+
+        <div class="mnl-card" style="padding:20px;">
+          <!-- Filtros de busca (cosméticos) -->
+          <div class="cadfor-filterbar">
+            <span>Filtros de Busca</span>
+            <button type="button" class="toggle" id="filterToggle" title="Expandir/recolher">−</button>
+            <span class="hint">clique para expandir/recolher</span>
+          </div>
+          <div class="cadfor-filterwrap cadfor-filterbar-body" id="filterBody" style="border:1px solid var(--mnl-divider); border-top:0; border-radius:0 0 10px 10px; padding:22px;">
+            <div class="cadfor-grid">
+              <div class="mnl-field"><label class="mnl-label">Código</label><input class="mnl-input" id="fCodigo" placeholder="Código" autocomplete="off"></div>
+              <div class="mnl-field col-2"><label class="mnl-label">Nome/Razão Social</label><input class="mnl-input" id="fNome" placeholder="Nome ou razão social" autocomplete="off"></div>
+              <div class="mnl-field"><label class="mnl-label">CNPJ</label><input class="mnl-input" id="fCnpj" placeholder="00.000.000/0000-00" autocomplete="off"></div>
+              <div class="mnl-field"><label class="mnl-label">CPF</label><input class="mnl-input" id="fCpf" placeholder="000.000.000-00" autocomplete="off"></div>
+              <div class="mnl-field"><label class="mnl-label">Constituição</label>
+                <select class="cadfor-select"><option>Selecione</option><option>LTDA</option><option>S.A.</option><option>MEI</option><option>EIRELI</option></select></div>
+              <div class="mnl-field"><label class="mnl-label">Enquadramento</label>
+                <select class="cadfor-select"><option>Selecione</option><option>Microempresa</option><option>Empresa de Pequeno Porte</option><option>Demais</option></select></div>
+              <div class="mnl-field"><label class="mnl-label">Status</label>
+                <select class="cadfor-select" id="fStatus"><option value="">Todos</option><option value="em_analise">Em análise</option><option value="aprovado">Aprovado</option><option value="rejeitado">Rejeitado</option></select></div>
+              <div class="mnl-field"><label class="mnl-label">Estado</label>
+                <select class="cadfor-select"><option>Selecione</option><option>GO</option><option>DF</option><option>MG</option><option>SP</option></select></div>
+              <div class="mnl-field"><label class="mnl-label">Entidade Consignatária</label>
+                <select class="cadfor-select"><option>Selecione</option></select></div>
+              <div class="mnl-field"><label class="mnl-label">Aguardando Validação?</label>
+                <select class="cadfor-select" id="fAguardando"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+            </div>
+            <div class="cadfor-actions">
+              <button type="button" class="mnl-btn primary sm" id="btnFiltrar"><i class="fa-solid fa-filter"></i> Filtrar</button>
+              <button type="button" class="mnl-btn outlined sm" id="btnLimpar"><i class="fa-solid fa-eraser"></i> Limpar</button>
+            </div>
+          </div>
+
+          <!-- Exportação (cosmético) -->
+          <div class="cadfor-export">
+            <span>Excel</span><span>Pdf</span><span>Xml</span><span>Csv</span><span>Html</span><span>Json</span>
+          </div>
+
+          <!-- Tabela -->
+          <div class="cadfor-tablewrap">
+            <div class="cadfor-grouphint">Arraste uma coluna e solte-a aqui para agrupar por essa coluna</div>
+            <table class="cadfor-table">
+              <thead>
+                <tr>
+                  <th>Código</th><th>Tipo</th><th>CPF/CNPJ</th><th>Nome/Razão Social</th>
+                  <th>Documento</th><th>Enviado em</th><th>Status</th><th style="text-align:right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="cadforBody"></tbody>
+            </table>
+          </div>
+
+          <div class="cadfor-footer">
+            <span>Mostrando <strong id="countShown">0</strong> registro(s)</span>
+            <button type="button" class="mnl-btn outlined sm" id="btnAtualizar"><i class="fa-solid fa-rotate-right"></i> Atualizar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: documento fictício -->
+  <div class="doc-overlay" id="docOverlay" role="dialog" aria-modal="true" aria-labelledby="docTitle">
+    <div class="doc-modal">
+      <div class="doc-modal-head">
+        <h3 id="docTitle">Documento</h3>
+        <button type="button" class="doc-close" id="docClose" aria-label="Fechar">&times;</button>
+      </div>
+      <div class="doc-modal-body">
+        <div class="doc-sheet" id="docSheet"></div>
+      </div>
+      <div class="doc-modal-foot">
+        <button type="button" class="mnl-btn outlined sm" id="docCloseBtn">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js?v=5"></script>
+  <script src="db.js?v=9"></script>
+  <script>
+    (function () {
+      var DB = window.SislogDB;
+      var body = document.getElementById('cadforBody');
+      var countShown = document.getElementById('countShown');
+      var fStatus = document.getElementById('fStatus');
+      var fCodigo = document.getElementById('fCodigo');
+      var fNome = document.getElementById('fNome');
+      var fCpf = document.getElementById('fCpf');
+      var fCnpj = document.getElementById('fCnpj');
+      var fAguardando = document.getElementById('fAguardando');
+
+      function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+      function digits(s){ return (s||'').replace(/\D/g,''); }
+
+      function chip(status) {
+        if (status === 'aprovado') return '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Aprovado</span>';
+        if (status === 'rejeitado') return '<span class="mnl-chip error"><i class="fa-solid fa-xmark"></i> Rejeitado</span>';
+        return '<span class="mnl-chip warning"><i class="fa-regular fa-clock"></i> Em análise</span>';
+      }
+      function docCpfCnpj(p) { return digits(p.cpf) ? p.cpf : (p.cnpj || '—'); }
+
+      function aplicaFiltros(list) {
+        var st = fStatus.value, cod = (fCodigo.value||'').toLowerCase(), nom = (fNome.value||'').toLowerCase();
+        var cpf = digits(fCpf.value), cnpj = digits(fCnpj.value), ag = fAguardando.value;
+        return list.filter(function (p) {
+          if (st && p.status !== st) return false;
+          if (cod && p.codigo.toLowerCase().indexOf(cod) < 0) return false;
+          if (nom && (p.nome + ' ' + p.razaoSocial).toLowerCase().indexOf(nom) < 0) return false;
+          if (cpf && digits(p.cpf).indexOf(cpf) < 0) return false;
+          if (cnpj && digits(p.cnpj).indexOf(cnpj) < 0) return false;
+          if (ag === 'sim' && p.status !== 'em_analise') return false;
+          if (ag === 'nao' && p.status === 'em_analise') return false;
+          return true;
+        });
+      }
+
+      function render() {
+        var list = aplicaFiltros(DB.listarPedidos());
+        countShown.textContent = String(list.length);
+        if (!list.length) {
+          body.innerHTML = '<tr class="cadfor-empty"><td colspan="8">Nenhum pedido encontrado. Envie um cadastro pelo chat de fornecedores para vê-lo aqui.</td></tr>';
+          return;
+        }
+        body.innerHTML = list.map(function (p) {
+          var acoes;
+          if (p.status === 'em_analise') {
+            acoes =
+              '<button type="button" class="mnl-iconbtn approve" data-approve="' + p.id + '" title="Aceitar cadastro" aria-label="Aceitar"><i class="fa-solid fa-check"></i></button>' +
+              '<button type="button" class="mnl-iconbtn" data-reject="' + p.id + '" title="Rejeitar cadastro" aria-label="Rejeitar"><i class="fa-solid fa-xmark"></i></button>' +
+              '<button type="button" class="mnl-iconbtn analyze" data-doc="' + p.id + '" title="Analisar documentos" aria-label="Analisar documentos"><i class="fa-regular fa-file-lines"></i></button>';
+          } else {
+            acoes = '<button type="button" class="mnl-iconbtn analyze" data-doc="' + p.id + '" title="Ver documento" aria-label="Ver documento"><i class="fa-regular fa-file-lines"></i></button>';
+          }
+          return '<tr>' +
+            '<td class="codigo">' + esc(p.codigo) + '</td>' +
+            '<td>' + esc(p.tipo) + '</td>' +
+            '<td>' + esc(docCpfCnpj(p)) + '</td>' +
+            '<td>' + esc(p.nome) + '<div style="font-size:12px;color:var(--mnl-text-secondary);">' + esc(p.razaoSocial) + '</div></td>' +
+            '<td><i class="fa-regular fa-file-lines" style="color:var(--mnl-text-disabled);margin-right:6px;"></i>' + esc(p.documento) + '</td>' +
+            '<td>' + esc(p.data) + ' ' + esc(p.hora) + '</td>' +
+            '<td>' + chip(p.status) + '</td>' +
+            '<td><div class="cadfor-rowactions">' + acoes + '</div></td>' +
+          '</tr>';
+        }).join('');
+
+        Array.prototype.forEach.call(body.querySelectorAll('[data-approve]'), function (b) {
+          b.addEventListener('click', function () { DB.aprovarPedido(b.getAttribute('data-approve')); render(); });
+        });
+        Array.prototype.forEach.call(body.querySelectorAll('[data-reject]'), function (b) {
+          b.addEventListener('click', function () {
+            var p = DB.getPedido(b.getAttribute('data-reject'));
+            if (window.confirm('Rejeitar o cadastro de ' + (p ? p.nome : '') + '? O solicitante será notificado por e-mail.')) { DB.rejeitarPedido(b.getAttribute('data-reject')); render(); }
+          });
+        });
+        Array.prototype.forEach.call(body.querySelectorAll('[data-doc]'), function (b) {
+          b.addEventListener('click', function () { abrirDoc(b.getAttribute('data-doc')); });
+        });
+      }
+
+      /* ---- Modal documento fictício ---- */
+      var overlay = document.getElementById('docOverlay');
+      var docTitle = document.getElementById('docTitle');
+      var docSheet = document.getElementById('docSheet');
+
+      function abrirDoc(id) {
+        var p = DB.getPedido(id);
+        if (!p) return;
+        docTitle.textContent = 'Documento — ' + p.documento;
+        docSheet.innerHTML =
+          '<div class="doc-brand"><i class="fa-solid fa-file-shield"></i> SISLOG · CADFOR</div>' +
+          '<h4>' + esc(p.documento) + '</h4>' +
+          '<p><strong>Fornecedor:</strong> ' + esc(p.razaoSocial || p.nome) + '<br>' +
+          '<strong>CNPJ:</strong> ' + esc(p.cnpj || '—') + ' &nbsp; <strong>CPF do responsável:</strong> ' + esc(digits(p.cpf) ? p.cpf : '—') + '<br>' +
+          '<strong>Tipo de solicitação:</strong> ' + esc(p.tipo) + '</p>' +
+          '<div class="line w80"></div><div class="line"></div><div class="line w60"></div>' +
+          '<p>Documento apresentado para fins de habilitação junto ao Cadastro de Fornecedores do Estado de Goiás. As informações acima foram declaradas pelo solicitante e estão sujeitas à validação da equipe do CADFOR.</p>' +
+          '<div class="line"></div><div class="line w40"></div>' +
+          '<div class="doc-stamp"><i class="fa-solid fa-stamp"></i> AGUARDANDO VALIDAÇÃO</div>';
+        overlay.classList.add('open');
+      }
+      function fechaDoc() { overlay.classList.remove('open'); }
+      document.getElementById('docClose').addEventListener('click', fechaDoc);
+      document.getElementById('docCloseBtn').addEventListener('click', fechaDoc);
+      overlay.addEventListener('click', function (e) { if (e.target === overlay) fechaDoc(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') fechaDoc(); });
+
+      /* ---- Filtros / toggle ---- */
+      document.getElementById('btnFiltrar').addEventListener('click', render);
+      document.getElementById('btnAtualizar').addEventListener('click', function () { fStatus.value=''; render(); });
+      document.getElementById('btnLimpar').addEventListener('click', function () {
+        fCodigo.value=''; fNome.value=''; fCpf.value=''; fCnpj.value=''; fStatus.value=''; fAguardando.value=''; render();
+      });
+      var filterBody = document.getElementById('filterBody');
+      document.getElementById('filterToggle').addEventListener('click', function () {
+        var hidden = filterBody.style.display === 'none';
+        filterBody.style.display = hidden ? '' : 'none';
+        this.textContent = hidden ? '−' : '+';
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

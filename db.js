@@ -18,6 +18,7 @@
     var d = load();
     if (!d.representantes) d.representantes = [];
     if (!d.emails) d.emails = [];
+    if (!d.pedidos) d.pedidos = [];
     if (!('empresa' in d)) d.empresa = null;
     return d;
   }
@@ -271,6 +272,109 @@
     save(d);
   }
 
+  /* ---------- Pedidos de análise (CADFOR) ----------
+     Toda etapa do chat que "a IA analisaria" passa a gerar um pedido
+     que fica em análise até um analista do CADFOR aprovar/rejeitar. */
+  var DOCS = ['contrato-social.pdf', 'procuracao.pdf', 'cartao-cnpj.pdf', 'comprovante-endereco.pdf'];
+
+  function criarPedidoAnalise(req) {
+    req = req || {};
+    var d = get();
+    var empresa = getEmpresa() || garantirEmpresa(req.cnpj);
+    // Evita duplicar: se já há pedido em análise para o mesmo CPF, reaproveita.
+    if (req.cpf && digits(req.cpf)) {
+      var existente = d.pedidos.filter(function (p) {
+        return digits(p.cpf) === digits(req.cpf) && p.status === 'em_analise';
+      })[0];
+      if (existente) return existente;
+    }
+    var t = agora();
+    var seq = (d.pedidoSeq || 0) + 1; d.pedidoSeq = seq;
+    var pedido = {
+      id: uid('ped'),
+      codigo: 'CAD-' + String(10000 + seq),
+      tipo: req.tipo || 'Cadastro',
+      nome: (req.nome && req.nome.trim()) || (empresa ? empresa.razaoSocial : 'Fornecedor'),
+      cpf: req.cpf ? (formatCpf(req.cpf) || req.cpf) : '',
+      cnpj: req.cnpj ? formatCnpj(req.cnpj) : (empresa ? empresa.cnpj : ''),
+      email: req.email || '',
+      razaoSocial: empresa ? empresa.razaoSocial : '',
+      documento: req.documento || rnd(DOCS),
+      status: 'em_analise',
+      data: t.data, hora: t.hora,
+      criadoEm: new Date().toISOString(), decididoEm: null
+    };
+    d.pedidos.push(pedido);
+    save(d);
+    return pedido;
+  }
+
+  function listarPedidos() { return get().pedidos.slice().reverse(); } // mais recentes primeiro
+  function getPedido(id) { return get().pedidos.filter(function (p) { return p.id === id; })[0] || null; }
+
+  function pedidoEmAnalise(doc) {
+    var c = digits(doc);
+    if (!c) return false;
+    return get().pedidos.some(function (p) {
+      return p.status === 'em_analise' && (digits(p.cpf) === c || digits(p.cnpj) === c);
+    });
+  }
+  function pedidoAprovado(doc) {
+    var c = digits(doc);
+    if (!c) return false;
+    return get().pedidos.some(function (p) {
+      return p.status === 'aprovado' && (digits(p.cpf) === c || digits(p.cnpj) === c);
+    });
+  }
+
+  function emailDestinoPedido(p, empresa) {
+    return p.email || ('contato@' + slug(empresa ? empresa.nomeFantasia : 'empresa') + '.com.br');
+  }
+
+  // Analista aprova -> chega e-mail informando que X pessoa de X empresa foi aprovada + criar senha
+  function aprovarPedido(id) {
+    var d = get();
+    var p = d.pedidos.filter(function (x) { return x.id === id; })[0];
+    if (!p || p.status === 'aprovado') return p || null;
+    var empresa = getEmpresa() || garantirEmpresa();
+    p.status = 'aprovado';
+    p.decididoEm = new Date().toISOString();
+    var t = agora();
+    d.emails.push({
+      id: uid('mail'), tipo: 'senha',
+      para: emailDestinoPedido(p, empresa), nome: p.nome, cpf: digits(p.cpf) ? p.cpf : (empresa ? empresa.cnpj : ''),
+      assunto: 'Cadastro aprovado — crie sua senha no SISLOG',
+      corpo: 'Boas notícias! O cadastro de ' + p.nome + ' referente à empresa ' +
+        (p.razaoSocial || empresa.razaoSocial) + ' foi analisado e APROVADO pela nossa equipe. ' +
+        'Clique no botão abaixo para criar sua senha e acessar o SISLOG.',
+      status: 'nao_lido', repId: null, data: t.data, hora: t.hora
+    });
+    save(d);
+    return p;
+  }
+
+  // Analista rejeita -> e-mail informando que o cadastro não foi aprovado
+  function rejeitarPedido(id) {
+    var d = get();
+    var p = d.pedidos.filter(function (x) { return x.id === id; })[0];
+    if (!p || p.status === 'rejeitado') return p || null;
+    var empresa = getEmpresa() || garantirEmpresa();
+    p.status = 'rejeitado';
+    p.decididoEm = new Date().toISOString();
+    var t = agora();
+    d.emails.push({
+      id: uid('mail'), tipo: 'rejeitado',
+      para: emailDestinoPedido(p, empresa), nome: p.nome, cpf: digits(p.cpf) ? p.cpf : (empresa ? empresa.cnpj : ''),
+      assunto: 'Cadastro não aprovado — SISLOG',
+      corpo: 'Após análise da nossa equipe, não foi possível aprovar o cadastro de ' + p.nome +
+        ' referente à empresa ' + (p.razaoSocial || empresa.razaoSocial) +
+        '. Revise os documentos enviados e, se necessário, realize um novo cadastro.',
+      status: 'nao_lido', repId: null, data: t.data, hora: t.hora
+    });
+    save(d);
+    return p;
+  }
+
   function resetar() { localStorage.removeItem(KEY); }
 
   /* ---------- Botão flutuante de reset (demo) ---------- */
@@ -306,6 +410,10 @@
     listarEmails: listarEmails, getEmail: getEmail, marcarEmailLido: marcarEmailLido,
     // autorização (chat)
     estaAutorizado: estaAutorizado, marcarSenhaCriada: marcarSenhaCriada, concluirCadastro: concluirCadastro,
+    // pedidos de análise (CADFOR)
+    criarPedidoAnalise: criarPedidoAnalise, listarPedidos: listarPedidos, getPedido: getPedido,
+    pedidoEmAnalise: pedidoEmAnalise, pedidoAprovado: pedidoAprovado,
+    aprovarPedido: aprovarPedido, rejeitarPedido: rejeitarPedido,
     // util
     resetar: resetar, maskEmail: maskEmail, maskCpf: maskCpf,
     formatCpf: formatCpf, formatCnpj: formatCnpj,

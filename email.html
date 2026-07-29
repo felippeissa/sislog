@@ -147,6 +147,8 @@
         var cpfD = digits(m.cpf);
         if (m.tipo === 'senha') {
           actions.innerHTML = '<a class="mnl-btn primary" href="cadastro-senha.html?cpf=' + encodeURIComponent(cpfD) + '"><i class="fa-solid fa-key"></i> Criar senha de acesso</a>';
+        } else if (m.tipo === 'rejeitado') {
+          actions.innerHTML = '<span class="mnl-chip" style="background:var(--mnl-error-lighter);color:var(--mnl-error-darker);"><i class="fa-solid fa-circle-xmark"></i> Cadastro não aprovado</span>';
         } else if (m.tipo === 'solicitacao') {
           if (aceito) {
             actions.innerHTML = '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Solicitação aprovada</span>' +
