@@ -8,8 +8,6 @@
   <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body data-page="fornecedores">
-  <div data-include="header"></div>
-
   <main>
     <section class="page-hero dot-pattern">
       <div class="container page-hero-inner">
@@ -26,6 +24,16 @@
           <p>Crie uma senha e confirme-a para acessar o portal do fornecedor.</p>
 
           <form class="senha-form" id="senhaForm" novalidate>
+            <div class="senha-field">
+              <label for="nome">Nome completo</label>
+              <div class="senha-input"><input type="text" id="nome" placeholder="Seu nome completo" autocomplete="name"></div>
+            </div>
+
+            <div class="senha-field">
+              <label for="email">E-mail</label>
+              <div class="senha-input"><input type="email" id="email" placeholder="seu@email.com" autocomplete="email"></div>
+            </div>
+
             <div class="senha-field">
               <label for="senha">Senha</label>
               <div class="senha-input">
@@ -51,21 +59,24 @@
     </section>
   </main>
 
-  <a class="support-button" href="fale-conosco.html" aria-label="Abrir atendimento">
-    <svg><use href="#i-chat"/></svg><span>Atendimento</span>
-  </a>
-
-  <div data-include="footer" id="rodape"></div>
   <script src="app.js?v=5"></script>
-  <script src="db.js?v=6"></script>
+  <script src="db.js?v=8"></script>
   <script>
     (function () {
       var DB = window.SislogDB;
-      var cpfParam = new URLSearchParams(location.search).get('cpf');
+      var params = new URLSearchParams(location.search);
+      var cpfParam = params.get('cpf');
       var form = document.getElementById('senhaForm');
+      var nome = document.getElementById('nome');
+      var email = document.getElementById('email');
       var senha = document.getElementById('senha');
       var repetir = document.getElementById('repetir');
       var msg = document.getElementById('senhaMsg');
+
+      // Se veio do e-mail (com CPF), pré-preenche nome e e-mail já cadastrados
+      var rep = (DB && cpfParam) ? DB.getRepresentantePorCpf(cpfParam) : null;
+      nome.value = (rep && rep.nome) || params.get('nome') || '';
+      email.value = (rep && rep.email) || params.get('email') || '';
 
       Array.prototype.forEach.call(document.querySelectorAll('.senha-toggle'), function (btn) {
         btn.addEventListener('click', function () {
@@ -79,9 +90,11 @@
       form.addEventListener('submit', function (e) {
         e.preventDefault();
         msg.className = 'senha-msg';
+        if (!nome.value.trim()) { msg.textContent = 'Informe o seu nome completo.'; msg.classList.add('error'); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) { msg.textContent = 'Informe um e-mail válido.'; msg.classList.add('error'); return; }
         if (!senha.value) { msg.textContent = 'Informe uma senha.'; msg.classList.add('error'); return; }
         if (senha.value !== repetir.value) { msg.textContent = 'As senhas não coincidem.'; msg.classList.add('error'); return; }
-        if (DB && cpfParam) DB.marcarSenhaCriada(cpfParam);   // marca no "servidor em cache"
+        if (DB && cpfParam) DB.marcarSenhaCriada(cpfParam, { nome: nome.value.trim(), email: email.value.trim() });   // marca no "servidor em cache"
         msg.textContent = '✅ Senha cadastrada com sucesso! Você já pode acessar o SISLOG.';
         msg.classList.add('ok');
         form.querySelector('.senha-submit').disabled = true;

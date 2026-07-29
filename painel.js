@@ -40,9 +40,12 @@
           if (r.status === 'pendente' && opts.onApprove) acoes += '<button type="button" class="mnl-iconbtn approve" data-approve="' + r.id + '" title="Aprovar" aria-label="Aprovar ' + quem + '"><i class="fa-solid fa-check" aria-hidden="true"></i></button>';
           if (opts.onRemove) acoes += '<button type="button" class="mnl-iconbtn" data-remove="' + r.id + '" title="Excluir representante" aria-label="Excluir ' + quem + '"><i class="fa-solid fa-trash-can" aria-hidden="true"></i></button>';
         }
+        var validade = (r.validadeMeses != null && r.validadeMeses !== '')
+          ? ' · Período de validação: ' + r.validadeMeses + (r.validadeMeses == 1 ? ' mês' : ' meses')
+          : '';
         return '<div class="mnl-list-row">' +
           '<span class="mnl-avatar" style="width:40px;height:40px;font-size:15px;">' + initials(r.nome) + '</span>' +
-          '<div class="grow"><div class="name">' + esc(r.nome) + '</div><div class="sub">CPF ' + DB.maskCpf(r.cpf) + ' · ' + DB.maskEmail(r.email) + '</div></div>' +
+          '<div class="grow"><div class="name">' + esc(r.nome) + '</div><div class="sub">CPF ' + DB.maskCpf(r.cpf) + ' · ' + DB.maskEmail(r.email) + validade + '</div></div>' +
           chipStatus(r.status) + acoes +
           '</div>';
       }).join('');

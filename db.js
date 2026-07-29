@@ -130,6 +130,8 @@
     if (!(req && req.nome && req.nome.trim())) return { ok: false, erro: 'Informe o nome.' };
     if (!cpfFormatoValido(req.cpf)) return { ok: false, erro: 'CPF deve ter 11 dígitos (000.000.000-00).' };
     if (!emailValido(req.email)) return { ok: false, erro: 'Informe um e-mail válido.' };
+    var vm = parseInt(req.validadeMeses, 10);
+    if (isNaN(vm) || vm < 0 || vm > 999) return { ok: false, erro: 'Informe a validade em meses (0 a 999).' };
     var d = get();
     if (d.representantes.some(function (r) { return digits(r.cpf) === digits(req.cpf); })) {
       return { ok: false, erro: 'Já existe um representante com este CPF.' };
@@ -140,6 +142,7 @@
       nome: req.nome.trim(),
       cpf: formatCpf(req.cpf),
       email: req.email.trim(),
+      validadeMeses: vm,
       status: 'pendente',
       origem: 'convite',
       senhaCriada: false,
@@ -238,12 +241,34 @@
     if (!c) return false;
     return get().representantes.some(function (r) { return digits(r.cpf) === c && r.status === 'aceito'; });
   }
-  function marcarSenhaCriada(cpf) {
+  function marcarSenhaCriada(cpf, dados) {
     var d = get();
     var r = d.representantes.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
-    if (r) { r.senhaCriada = true; if (r.status === 'pendente') { r.status = 'aceito'; r.aceitoEm = new Date().toISOString(); } }
+    if (r) {
+      r.senhaCriada = true;
+      if (dados && dados.nome) r.nome = dados.nome;
+      if (dados && dados.email) r.email = dados.email;
+      if (r.status === 'pendente') { r.status = 'aceito'; r.aceitoEm = new Date().toISOString(); }
+    }
     save(d);
     return r;
+  }
+
+  // Ao concluir o cadastro pelo chat -> chega um e-mail para criar a senha
+  function concluirCadastro(dados) {
+    dados = dados || {};
+    var d = get();
+    var empresa = getEmpresa() || garantirEmpresa();
+    var t = agora();
+    var para = dados.email || ('contato@' + slug(empresa ? empresa.nomeFantasia : 'empresa') + '.com.br');
+    d.emails.push({
+      id: uid('mail'), tipo: 'senha',
+      para: para, nome: dados.nome || '', cpf: dados.cpf || '',
+      assunto: 'Crie sua senha de acesso ao SISLOG',
+      corpo: 'Seu cadastro foi concluído com sucesso! Clique no botão abaixo para criar sua senha de acesso ao SISLOG.',
+      status: 'nao_lido', repId: null, data: t.data, hora: t.hora
+    });
+    save(d);
   }
 
   function resetar() { localStorage.removeItem(KEY); }
@@ -280,7 +305,7 @@
     // e-mails
     listarEmails: listarEmails, getEmail: getEmail, marcarEmailLido: marcarEmailLido,
     // autorização (chat)
-    estaAutorizado: estaAutorizado, marcarSenhaCriada: marcarSenhaCriada,
+    estaAutorizado: estaAutorizado, marcarSenhaCriada: marcarSenhaCriada, concluirCadastro: concluirCadastro,
     // util
     resetar: resetar, maskEmail: maskEmail, maskCpf: maskCpf,
     formatCpf: formatCpf, formatCnpj: formatCnpj,

@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="styles.css?v=5">
   <link rel="stylesheet" href="minimals.css?v=5">
   <style>
+    /* Centraliza a caixa de e-mails na tela */
+    .mail-center { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .mail-center .mail-app { width: min(1120px, 100%); }
+
     /* Cliente de e-mail (3 painéis) — layout genérico de webmail, tokens Minimals */
     .mail-app { display: grid; grid-template-columns: 210px 340px 1fr; height: 620px; border: 1px solid var(--mnl-divider); border-radius: var(--mnl-radius); overflow: hidden; background: var(--mnl-paper); box-shadow: var(--mnl-shadow-card); }
 
@@ -56,26 +60,8 @@
   </style>
 </head>
 <body data-page="fornecedores">
-  <div data-include="header"></div>
-
-  <main class="mnl">
-    <section class="page-section" style="padding-top: 30px;">
-      <div class="container" style="max-width: 1120px;">
-        <nav class="breadcrumb left">
-          <a href="index.html">Página Inicial</a><span>•</span>
-          <span class="current">Caixa de e-mails</span>
-        </nav>
-
-        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:18px;">
-          <div>
-            <p class="mnl-overline">Protótipo · caixa única</p>
-            <h1 class="mnl-card-title" style="font-size:24px;">Caixa de entrada</h1>
-            <p class="mnl-card-subtitle">Todos os convites enviados aos representantes chegam aqui.</p>
-          </div>
-          <a class="mnl-btn outlined sm" href="painel-socio.html"><i class="fa-solid fa-arrow-left"></i> Painel do sócio</a>
-        </div>
-
-        <div class="mail-app">
+  <div class="mnl mail-center">
+    <div class="mail-app">
           <!-- Pastas -->
           <aside class="mail-nav">
             <button type="button" class="mail-compose"><i class="fa-solid fa-pen"></i> Nova mensagem</button>
@@ -99,14 +85,11 @@
           <div class="mail-read" id="mailRead">
             <div class="mail-empty">Selecione uma mensagem para ler.</div>
           </div>
-        </div>
-      </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
-  <div data-include="footer" id="rodape"></div>
   <script src="app.js?v=5"></script>
-  <script src="db.js?v=6"></script>
+  <script src="db.js?v=8"></script>
   <script>
     (function () {
       var DB = window.SislogDB;
@@ -162,7 +145,9 @@
           '<div class="mnl-btn-row" id="mailActions"></div>';
         var actions = document.getElementById('mailActions');
         var cpfD = digits(m.cpf);
-        if (m.tipo === 'solicitacao') {
+        if (m.tipo === 'senha') {
+          actions.innerHTML = '<a class="mnl-btn primary" href="cadastro-senha.html?cpf=' + encodeURIComponent(cpfD) + '"><i class="fa-solid fa-key"></i> Criar senha de acesso</a>';
+        } else if (m.tipo === 'solicitacao') {
           if (aceito) {
             actions.innerHTML = '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Solicitação aprovada</span>' +
               '<a class="mnl-btn outlined" href="painel-socio.html"><i class="fa-solid fa-table-columns"></i> Abrir painel do sócio</a>';
