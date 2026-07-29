@@ -320,6 +320,15 @@
     return pedido;
   }
 
+  // Situação do cadastro mais recente (para a retomada do chat, sem precisar do CPF)
+  function situacaoUltimoCadastro() {
+    var d = get();
+    if (d.pedidos.length) return d.pedidos[d.pedidos.length - 1].status; // em_analise | aprovado | rejeitado
+    if (d.representantes.some(function (r) { return r.status === 'aceito'; })) return 'aprovado';
+    if (d.representantes.length) return 'em_analise';
+    return 'nenhum';
+  }
+
   function listarPedidos() { return get().pedidos.slice().reverse(); } // mais recentes primeiro
   function getPedido(id) { return get().pedidos.filter(function (p) { return p.id === id; })[0] || null; }
 
@@ -443,7 +452,7 @@
     estaAutorizado: estaAutorizado, marcarSenhaCriada: marcarSenhaCriada, concluirCadastro: concluirCadastro,
     // pedidos de análise (CADFOR)
     criarPedidoAnalise: criarPedidoAnalise, listarPedidos: listarPedidos, getPedido: getPedido,
-    pedidoEmAnalise: pedidoEmAnalise, pedidoAprovado: pedidoAprovado,
+    pedidoEmAnalise: pedidoEmAnalise, pedidoAprovado: pedidoAprovado, situacaoUltimoCadastro: situacaoUltimoCadastro,
     aprovarPedido: aprovarPedido, rejeitarPedido: rejeitarPedido,
     // util
     resetar: resetar, maskEmail: maskEmail, maskCpf: maskCpf,

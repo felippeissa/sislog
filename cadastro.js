@@ -79,13 +79,14 @@
       // Tem procuração?
       tem_procuracao: { bot: [ { text: 'Você possui uma procuração válida que lhe concede poderes para representar a empresa?' } ],
         input: { type: 'choice', options: ['Sim', 'Não'], placeholder: 'Sim ou Não',
-          route: function (v) { return isSim(v) ? 'auth_procuracao' : 'solicita_nome'; } } },
+          route: function (v) { return isSim(v) ? 'upload_procuracao' : 'solicita_nome'; } } },
 
-      // Tem procuração? Sim -> Login ID Goiás -> Upload -> Validação -> Procuração OK?
-      auth_procuracao: { bot: [ { text: AUTH_MSG } ], auth: 'upload_procuracao' },
-      upload_procuracao: { bot: [ { text: 'Agora, anexe a procuração que comprova seus poderes de representação da empresa.' } ],
+      // Tem procuração? Sim -> Upload da procuração -> Login ID Goiás -> Análise (CADFOR)
+      upload_procuracao: { bot: [ { text: 'Certo! Anexe a procuração que comprova seus poderes de representação da empresa.' } ],
         input: { type: 'file', attachLabel: PROC_OK, placeholder: 'Anexe a procuração (📎) ou digite o nome do arquivo',
-          route: function (v) { session.documento = v; return 'ia_avalia'; } } },
+          route: function (v) { session.documento = v; return 'recebeu_procuracao'; } } },
+      recebeu_procuracao: { bot: [ { text: 'Recebemos a procuração. ✅' } ], next: 'auth_procuracao' },
+      auth_procuracao: { bot: [ { text: AUTH_MSG } ], auth: 'ia_avalia' },
       ia_avalia: {
         onEnter: function () { if (DB) DB.criarPedidoAnalise({ tipo: 'Representante (procuração)', nome: session.nome, cpf: session.cpf, cnpj: session.cnpj, documento: session.documento || 'procuracao.pdf' }); },
         bot: [
@@ -122,21 +123,25 @@
         { text: 'Assim que o sócio administrador aprovar sua solicitação, você receberá um e-mail para criar sua senha de acesso.' }
       ], end: true, actions: [ { label: 'Já fui aprovado — continuar', to: 'retomada_start' } ] },
 
-      // ================= 2º fluxo: Continuar cadastro (checagem AUTOMÁTICA da aprovação) =================
-      retomada_start: { bot: [ { text: 'Vamos dar continuidade ao seu cadastro.' }, { text: 'Para localizarmos sua solicitação, informe o seu CPF.' } ],
-        input: { type: 'text', mask: 'cpf', placeholder: 'Informe o CPF (000.000.000-00)...',
-          validate: function (v) { return DB ? DB.cpfFormatoValido(v) : true; },
-          erro: 'CPF inválido. Informe no formato 000.000.000-00 (11 dígitos).',
-          route: function (v) { session.cpf = v; return 'retomada_check'; } } },
-      retomada_check: { bot: [ { text: 'Estamos verificando o andamento do seu cadastro...' } ],
-        decide: function () { return (DB && (DB.estaAutorizado(session.cpf) || DB.pedidoAprovado(session.cpf))) ? 'retomada_aprovado' : 'retomada_pendente'; } },
+      // ================= 2º fluxo: Continuar cadastro (checagem AUTOMÁTICA do status) =================
+      retomada_start: { bot: [ { text: 'Vamos dar continuidade ao seu cadastro. Estamos verificando o andamento...' } ],
+        decide: function () {
+          var s = DB ? DB.situacaoUltimoCadastro() : 'nenhum';
+          if (s === 'aprovado') return 'retomada_aprovado';
+          if (s === 'rejeitado') return 'retomada_rejeitado';
+          return 'retomada_pendente';
+        } },
       retomada_aprovado: { bot: [
-        { text: '🎉 Seu cadastro foi aprovado! Você já pode acessar o SISLOG.' },
+        { text: '🎉 Seu cadastro foi <strong>aprovado</strong>! Você já pode acessar o SISLOG.' },
         { text: 'Clique no botão abaixo para criar sua senha de acesso.' }
       ], end: true, actions: [ { label: 'Criar senha de acesso', href: 'cadastro-senha.html', newTab: true } ] },
       retomada_pendente: { bot: [
         { text: 'Seu cadastro ainda está <strong>em análise</strong> pela nossa equipe.' },
         { text: 'Assim que a análise for concluída, você receberá um e-mail para criar sua senha de acesso.' }
+      ], end: true },
+      retomada_rejeitado: { bot: [
+        { text: 'Infelizmente seu cadastro <strong>não foi aprovado</strong> pela nossa equipe.' },
+        { text: 'Verifique os documentos enviados e, se necessário, realize um novo cadastro.' }
       ], end: true }
     };
 
