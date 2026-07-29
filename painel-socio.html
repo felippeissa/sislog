@@ -7,6 +7,18 @@
   <title>SISLOG — Painel do sócio</title>
   <link rel="stylesheet" href="styles.css?v=5">
   <link rel="stylesheet" href="minimals.css?v=5">
+  <style>
+    .rep-tablewrap { border:1px solid var(--mnl-divider); border-radius:12px; overflow-x:auto; }
+    table.rep-table { width:100%; min-width:960px; border-collapse:collapse; font-size:14px; }
+    .rep-table th { text-align:left; padding:14px 16px; color:var(--mnl-text-secondary); font-weight:700; font-size:13px; background:var(--mnl-grey-100); border-bottom:1px solid var(--mnl-divider); white-space:nowrap; }
+    .rep-table td { padding:14px 16px; border-bottom:1px solid var(--mnl-divider); vertical-align:middle; white-space:nowrap; }
+    .rep-table tr:last-child td { border-bottom:0; }
+    .rep-table tbody tr:hover { background:var(--mnl-grey-100); }
+    .rep-name { display:flex; align-items:center; gap:10px; }
+    .rep-name .nm { font-weight:600; margin-bottom:4px; }
+    .rep-actions { display:flex; gap:6px; justify-content:flex-end; }
+    .rep-empty { text-align:center; color:var(--mnl-text-disabled); padding:28px 16px; }
+  </style>
 </head>
 <body data-page="fornecedores">
   <main class="mnl">
@@ -51,23 +63,29 @@
             <div class="mnl-btn-row">
               <button type="button" class="mnl-btn primary" id="addBtn"><i class="fa-solid fa-paper-plane"></i> Enviar convite</button>
             </div>
+          </div>
+        </div>
 
-            <hr class="mnl-divider">
-
-            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-              <span class="mnl-overline">Representantes</span>
+        <!-- Tabela de representantes (largura total) -->
+        <div class="mnl-card" style="margin-top:24px;">
+          <div class="mnl-card-header">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div>
+                <h2 class="mnl-card-title">Representantes</h2>
+                <p class="mnl-card-subtitle">Representantes vinculados à empresa, com período de representação e responsável pela aprovação.</p>
+              </div>
               <span class="mnl-chip" id="repCount">0</span>
             </div>
-            <div class="mnl-list" id="repList"></div>
           </div>
+          <div id="repList"></div>
         </div>
       </div>
     </section>
   </main>
 
   <script src="app.js?v=5"></script>
-  <script src="db.js?v=8"></script>
-  <script src="painel.js?v=7"></script>
+  <script src="db.js?v=9"></script>
+  <script src="painel.js?v=8"></script>
   <script>
     (function () {
       var DB = window.SislogDB, UI = window.SislogPainel;
@@ -91,8 +109,7 @@
 
       function refresh() {
         UI.renderEmpresa(document.getElementById('empresaCard'));
-        UI.renderRepresentantes(repList, {
-          editable: true,
+        UI.renderTabelaRepresentantes(repList, {
           onApprove: function (id) { var r = DB.getRepresentante(id); if (r) DB.aprovarRepresentantePorCpf(r.cpf); refresh(); },
           onRemove: function (id) {
             var r = DB.getRepresentante(id);

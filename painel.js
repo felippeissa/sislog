@@ -16,6 +16,20 @@
       : '<span class="mnl-chip warning"><i class="fa-regular fa-clock"></i> Pendente</span>';
   }
 
+  function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'; }
+  function dataFim(iso, meses) {
+    var m = parseInt(meses, 10);
+    if (!iso || isNaN(m) || m <= 0) return '—';
+    var d = new Date(iso); d.setMonth(d.getMonth() + m);
+    return d.toLocaleDateString('pt-BR');
+  }
+  function periodoTexto(meses) {
+    var m = parseInt(meses, 10);
+    if (isNaN(m)) return '—';
+    if (m <= 0) return 'Indeterminado';
+    return m + (m === 1 ? ' mês' : ' meses');
+  }
+
   window.SislogPainel = {
     renderEmpresa: function (el) {
       var e = DB.garantirEmpresa();
@@ -58,6 +72,52 @@
           b.addEventListener('click', function () { if (opts.onRemove) opts.onRemove(b.getAttribute('data-remove')); });
         });
       }
+    },
+
+    // Visão em tabela (painel do sócio) — colunas completas + ações
+    renderTabelaRepresentantes: function (el, opts) {
+      opts = opts || {};
+      var reps = DB.listarRepresentantes();
+      var count = document.getElementById('repCount');
+      if (count) count.textContent = String(reps.length);
+
+      var rows = reps.map(function (r) {
+        var aceito = r.status === 'aceito';
+        var inicioIso = r.aceitoEm || (aceito ? r.convidadoEm : null);
+        var acoes = '';
+        if (r.status === 'pendente' && opts.onApprove) {
+          acoes += '<button type="button" class="mnl-iconbtn approve" data-approve="' + r.id + '" title="Aprovar" aria-label="Aprovar ' + esc(r.nome) + '"><i class="fa-solid fa-check"></i></button>';
+        }
+        if (opts.onRemove) {
+          acoes += '<button type="button" class="mnl-iconbtn" data-remove="' + r.id + '" title="Excluir representante" aria-label="Excluir ' + esc(r.nome) + '"><i class="fa-solid fa-trash-can"></i></button>';
+        }
+        return '<tr>' +
+          '<td><div class="rep-name"><span class="mnl-avatar" style="width:34px;height:34px;font-size:13px;">' + initials(r.nome) + '</span>' +
+            '<div><div class="nm">' + esc(r.nome) + '</div>' + chipStatus(r.status) + '</div></div></td>' +
+          '<td>' + esc(DB.formatCpf(r.cpf)) + '</td>' +
+          '<td>' + esc(r.email || '—') + '</td>' +
+          '<td>' + (aceito ? esc(r.aprovadoPor || '—') : '<span class="mnl-muted">—</span>') + '</td>' +
+          '<td>' + periodoTexto(r.validadeMeses) + '</td>' +
+          '<td>' + (aceito ? fmtDate(inicioIso) : '—') + '</td>' +
+          '<td>' + (aceito ? dataFim(inicioIso, r.validadeMeses) : '—') + '</td>' +
+          '<td><div class="rep-actions">' + (acoes || '<span class="mnl-muted">—</span>') + '</div></td>' +
+          '</tr>';
+      }).join('');
+
+      el.innerHTML =
+        '<div class="rep-tablewrap"><table class="rep-table"><thead><tr>' +
+        '<th>Nome do Representante</th><th>CPF</th><th>E-mail</th><th>Aprovado por</th>' +
+        '<th>Período de Representação</th><th>Data início</th><th>Data fim</th><th style="text-align:right;">Ações</th>' +
+        '</tr></thead><tbody>' +
+        (rows || '<tr><td colspan="8" class="rep-empty">Nenhum representante cadastrado ainda.</td></tr>') +
+        '</tbody></table></div>';
+
+      Array.prototype.forEach.call(el.querySelectorAll('[data-approve]'), function (b) {
+        b.addEventListener('click', function () { if (opts.onApprove) opts.onApprove(b.getAttribute('data-approve')); });
+      });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-remove]'), function (b) {
+        b.addEventListener('click', function () { if (opts.onRemove) opts.onRemove(b.getAttribute('data-remove')); });
+      });
     }
   };
 })();

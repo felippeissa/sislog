@@ -48,26 +48,21 @@
       // É sócio/administrador?
       is_socio: { bot: [ { text: 'Você é sócio ou administrador da empresa?' } ],
         input: { type: 'choice', options: ['Sim', 'Não'], placeholder: 'Sim ou Não',
-          route: function (v) { return isSim(v) ? 'socio_cpf' : 'is_representante'; } } },
+          route: function (v) { return isSim(v) ? 'socio_cnpj' : 'is_representante'; } } },
 
-      // É sócio? Sim -> CPF -> CNPJ -> Login ID Goiás -> Validação -> Cadastro concluído
-      socio_cpf: { bot: [ { text: 'Para iniciarmos a validação, informe o seu CPF.' } ],
-        input: { type: 'text', mask: 'cpf', placeholder: 'Informe o CPF (000.000.000-00)...',
-          validate: function (v) { return DB ? DB.cpfFormatoValido(v) : true; },
-          erro: 'CPF inválido. Informe no formato 000.000.000-00 (11 dígitos).',
-          route: function (v) { session.cpf = v; return 'socio_cnpj'; } } },
-      socio_cnpj: { bot: [ { text: 'Agora informe o CNPJ da empresa.' } ],
+      // É sócio? Sim -> CNPJ -> Login ID Goiás (valida vínculo de sócio) -> Cadastro concluído
+      socio_cnpj: { bot: [ { text: 'Perfeito! Para iniciarmos, informe o CNPJ da empresa.' } ],
         input: { type: 'text', mask: 'cnpj', placeholder: 'Informe o CNPJ (00.000.000/0000-00)...',
           validate: function (v) { return DB ? DB.cnpjFormatoValido(v) : true; },
           erro: 'CNPJ inválido. Informe no formato 00.000.000/0000-00 (14 dígitos).',
-          route: function (v) { session.cnpj = v; return 'auth_documentos'; } } },
-      auth_documentos: { bot: [ { text: AUTH_MSG } ], auth: 'segue_aprovacao' },
-      segue_aprovacao: {
-        onEnter: function () { if (DB) DB.criarPedidoAnalise({ tipo: 'Sócio/Administrador', cpf: session.cpf, cnpj: session.cnpj, documento: 'contrato-social.pdf' }); },
-        bot: [
-          { text: 'Recebemos suas informações. ✅' },
-          { text: 'Nossa equipe está analisando suas informações. Assim que a análise for concluída, você receberá um e-mail para criar sua senha de acesso.' }
-        ], end: true, actions: [ { label: 'Já concluí a análise — continuar', to: 'retomada_start' } ] },
+          route: function (v) { session.cnpj = v; return 'auth_socio'; } } },
+      auth_socio: { bot: [ { text: AUTH_MSG } ], auth: 'valida_socio' },
+      valida_socio: { bot: [ { text: 'Validando junto ao ID Goiás se você é sócio administrador da empresa...' } ], next: 'fim_socio' },
+      fim_socio: { onEnter: function () { if (DB) DB.concluirCadastro({ cnpj: session.cnpj }); }, bot: [
+        { text: '✅ Confirmamos que você é sócio administrador da empresa.' },
+        { text: '🎉 Cadastro concluído com sucesso! Sua empresa já está habilitada para participar dos processos de contratação realizados pelo Estado de Goiás por meio do SISLOG.' },
+        { text: 'Enviamos também um e-mail para você criar sua senha. Ou clique no botão abaixo.' }
+      ], end: true, actions: [ { label: 'Criar senha de acesso', href: 'cadastro-senha.html', newTab: true } ] },
 
       // É representante?
       is_representante: { bot: [ { text: 'Você é o representante legal da empresa?' } ],

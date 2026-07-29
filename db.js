@@ -67,6 +67,8 @@
   var SUFIXOS = ['LTDA', 'S.A.', 'ME', 'EIRELI'];
   var RAMOS = ['Construção civil', 'Logística e transporte', 'Comércio atacadista', 'Tecnologia da informação', 'Serviços administrativos', 'Agronegócio'];
   var CIDADES = ['Goiânia - GO', 'Aparecida de Goiânia - GO', 'Anápolis - GO', 'Rio Verde - GO', 'Catalão - GO', 'Luziânia - GO'];
+  var SOCIOS = ['Carlos Mendes', 'Ana Beatriz Rocha', 'Rafael Oliveira', 'Juliana Castro', 'Marcos Antônio Lima', 'Fernanda Ribeiro'];
+  var ANALISTAS = ['Patrícia Gomes', 'Bruno Teixeira', 'Larissa Nunes', 'Eduardo Ramos'];
 
   function gerarCnpj() {
     var s = '';
@@ -81,6 +83,7 @@
       cnpj: cnpjFormatoValido(cnpj) ? formatCnpj(cnpj) : gerarCnpj(),
       ramo: rnd(RAMOS),
       cidade: rnd(CIDADES),
+      socioNome: rnd(SOCIOS),
       abertura: '0' + (1 + Math.floor(Math.random() * 9)) + '/0' + (1 + Math.floor(Math.random() * 9)) + '/20' + (10 + Math.floor(Math.random() * 14))
     };
   }
@@ -188,6 +191,7 @@
     if (!r) return null;
     r.status = 'aceito';
     r.aceitoEm = new Date().toISOString();
+    if (!r.aprovadoPor) r.aprovadoPor = empresa ? empresa.socioNome : '';
     d.emails.forEach(function (m) { if (m.tipo === 'solicitacao' && digits(m.cpf) === digits(cpf)) m.status = 'lido'; });
     if (!d.emails.some(function (m) { return m.tipo === 'convite' && digits(m.cpf) === digits(cpf); })) {
       var t = agora();
@@ -220,7 +224,10 @@
   function aceitarConvitePorCpf(cpf) {
     var d = get();
     var r = d.representantes.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
-    if (r) { r.status = 'aceito'; r.aceitoEm = new Date().toISOString(); }
+    if (r) {
+      r.status = 'aceito'; r.aceitoEm = new Date().toISOString();
+      if (!r.aprovadoPor) r.aprovadoPor = (d.empresa && d.empresa.socioNome) || '';
+    }
     d.emails.forEach(function (m) { if (digits(m.cpf) === digits(cpf)) m.status = 'lido'; });
     save(d);
     return r;
@@ -249,7 +256,10 @@
       r.senhaCriada = true;
       if (dados && dados.nome) r.nome = dados.nome;
       if (dados && dados.email) r.email = dados.email;
-      if (r.status === 'pendente') { r.status = 'aceito'; r.aceitoEm = new Date().toISOString(); }
+      if (r.status === 'pendente') {
+        r.status = 'aceito'; r.aceitoEm = new Date().toISOString();
+        if (!r.aprovadoPor) r.aprovadoPor = (d.empresa && d.empresa.socioNome) || '';
+      }
     }
     save(d);
     return r;
@@ -300,6 +310,7 @@
       email: req.email || '',
       razaoSocial: empresa ? empresa.razaoSocial : '',
       documento: req.documento || rnd(DOCS),
+      analista: rnd(ANALISTAS),
       status: 'em_analise',
       data: t.data, hora: t.hora,
       criadoEm: new Date().toISOString(), decididoEm: null
@@ -339,6 +350,26 @@
     var empresa = getEmpresa() || garantirEmpresa();
     p.status = 'aprovado';
     p.decididoEm = new Date().toISOString();
+
+    // Reflete a aprovação na lista de representantes, marcando o CADFOR como responsável.
+    if (p.cpf && digits(p.cpf)) {
+      var aprovador = 'CADFOR · ' + (p.analista || 'Equipe CADFOR');
+      var rep = d.representantes.filter(function (x) { return digits(x.cpf) === digits(p.cpf); })[0];
+      if (rep) {
+        rep.aprovadoPor = aprovador;
+        if (rep.status !== 'aceito') { rep.status = 'aceito'; rep.aceitoEm = new Date().toISOString(); }
+      } else {
+        rep = {
+          id: uid('rep'), nome: p.nome, cpf: p.cpf, email: p.email || '',
+          validadeMeses: (p.validadeMeses != null && p.validadeMeses !== '') ? p.validadeMeses : 12,
+          status: 'aceito', origem: 'cadfor', senhaCriada: false,
+          convidadoEm: p.criadoEm || new Date().toISOString(),
+          aceitoEm: new Date().toISOString(), aprovadoPor: aprovador
+        };
+        d.representantes.push(rep);
+      }
+    }
+
     var t = agora();
     d.emails.push({
       id: uid('mail'), tipo: 'senha',
