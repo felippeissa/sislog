@@ -157,7 +157,7 @@
         bot: [
           { text: 'Recebemos o documento enviado. ✅' },
           { text: 'Nossa equipe está analisando suas informações. Assim que a análise da procuração for concluída, você será comunicado por e-mail para criar sua senha de acesso.' }
-        ], end: true, actions: [ { label: 'Já concluí a análise — continuar', to: 'retomada_start' } ] },
+        ], end: true },
 
       // Tem procuração? Não -> coleta dados do representante -> cria solicitação no "servidor" (db)
       // -> e-mail (mascarado) ao sócio administrador -> Cadastro pendente
@@ -362,14 +362,30 @@
       var chan = null;
       try { chan = new BroadcastChannel('idgoias-auth'); } catch (e) { chan = null; }
 
+      // Captura o CPF autenticado no ID Goiás e usa como CPF da pessoa no chat.
+      function capturaCpf(cpf) {
+        var d = (cpf || '').replace(/\D/g, '');
+        if (d) session.cpf = DB ? DB.formatCpf(d) : d;
+      }
+
       function finish() {
         if (done) return;
         done = true;
         if (chan) { try { chan.close(); } catch (e) {} }
+        // Fallback: se a mensagem não trouxe o CPF, tenta o localStorage gravado no login.
+        if (!session.cpf) { try { capturaCpf(localStorage.getItem('sislog:idgoias:cpf')); } catch (e) {} }
         clearQuick();
         setTimeout(function () { goTo(nextId); }, 400);
       }
-      if (chan) { chan.onmessage = function (ev) { if (ev && ev.data === 'authenticated') finish(); }; }
+      if (chan) {
+        chan.onmessage = function (ev) {
+          var data = ev && ev.data;
+          var ok = data === 'authenticated' || (data && data.type === 'authenticated');
+          if (!ok) return;
+          if (data && data.cpf) capturaCpf(data.cpf);
+          finish();
+        };
+      }
 
       function openLogin() { return window.open('login-id-goias.html', 'idgoias_login'); }
 

@@ -161,7 +161,18 @@
     // PROTÓTIPO: não autentica de verdade, não envia dados a lugar nenhum.
     (function () {
       var form = document.getElementById('loginForm');
+      var cpfInput = document.getElementById('usernameUserInput');
       var senha = document.getElementById('password');
+
+      // Máscara de CPF enquanto digita
+      function formatCpf(c) {
+        var d = (c || '').replace(/\D/g, '').slice(0, 11);
+        if (d.length > 9) return d.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+        if (d.length > 6) return d.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+        if (d.length > 3) return d.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+        return d;
+      }
+      cpfInput.addEventListener('input', function () { cpfInput.value = formatCpf(cpfInput.value); });
       var toggle = document.getElementById('toggle-password');
       var eye = document.getElementById('eye-icon');
       var status = document.getElementById('idgStatus');
@@ -181,8 +192,11 @@
         status.textContent = 'Autenticando via ID Goiás...';
         setTimeout(function () {
           status.textContent = '✅ Autenticado com sucesso! Retornando ao SISLOG...';
-          // Avisa o chat (outra aba) que a autenticação foi concluída
-          try { var ch = new BroadcastChannel('idgoias-auth'); ch.postMessage('authenticated'); ch.close(); } catch (e) {}
+          var cpf = (cpfInput.value || '').replace(/\D/g, '');
+          // Guarda o CPF autenticado (fallback caso o BroadcastChannel falhe)
+          try { localStorage.setItem('sislog:idgoias:cpf', cpf); } catch (e) {}
+          // Avisa o chat (outra aba) que a autenticação foi concluída, com o CPF digitado
+          try { var ch = new BroadcastChannel('idgoias-auth'); ch.postMessage({ type: 'authenticated', cpf: cpf }); ch.close(); } catch (e) {}
         }, 1100);
         setTimeout(function () {
           window.close();
