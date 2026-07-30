@@ -11,9 +11,9 @@
   function item(k, v) { return '<div class="mnl-info-item"><div class="k">' + esc(k) + '</div><div class="v">' + (v ? esc(v) : '—') + '</div></div>'; }
   function initials(nome) { var p = (nome || 'R').trim().split(/\s+/); return ((p[0] || '').charAt(0) + (p[1] || '').charAt(0)).toUpperCase() || 'R'; }
   function chipStatus(status) {
-    return status === 'aceito'
-      ? '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Aceito</span>'
-      : '<span class="mnl-chip warning"><i class="fa-regular fa-clock"></i> Pendente</span>';
+    if (status === 'aceito') return '<span class="mnl-chip success"><i class="fa-solid fa-check"></i> Aceito</span>';
+    if (status === 'recusado') return '<span class="mnl-chip error"><i class="fa-solid fa-xmark"></i> Recusado</span>';
+    return '<span class="mnl-chip warning"><i class="fa-regular fa-clock"></i> Pendente</span>';
   }
 
   function fmtDate(iso) { return iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'; }
@@ -88,6 +88,9 @@
         if (r.status === 'pendente' && opts.onApprove) {
           acoes += '<button type="button" class="mnl-iconbtn approve" data-approve="' + r.id + '" title="Aprovar" aria-label="Aprovar ' + esc(r.nome) + '"><i class="fa-solid fa-check"></i></button>';
         }
+        if (r.status === 'pendente' && opts.onReject) {
+          acoes += '<button type="button" class="mnl-iconbtn" data-reject="' + r.id + '" title="Recusar" aria-label="Recusar ' + esc(r.nome) + '"><i class="fa-solid fa-xmark"></i></button>';
+        }
         if (opts.onRemove) {
           acoes += '<button type="button" class="mnl-iconbtn" data-remove="' + r.id + '" title="Excluir representante" aria-label="Excluir ' + esc(r.nome) + '"><i class="fa-solid fa-trash-can"></i></button>';
         }
@@ -114,6 +117,9 @@
 
       Array.prototype.forEach.call(el.querySelectorAll('[data-approve]'), function (b) {
         b.addEventListener('click', function () { if (opts.onApprove) opts.onApprove(b.getAttribute('data-approve')); });
+      });
+      Array.prototype.forEach.call(el.querySelectorAll('[data-reject]'), function (b) {
+        b.addEventListener('click', function () { if (opts.onReject) opts.onReject(b.getAttribute('data-reject')); });
       });
       Array.prototype.forEach.call(el.querySelectorAll('[data-remove]'), function (b) {
         b.addEventListener('click', function () { if (opts.onRemove) opts.onRemove(b.getAttribute('data-remove')); });

@@ -193,14 +193,39 @@
     r.aceitoEm = new Date().toISOString();
     if (!r.aprovadoPor) r.aprovadoPor = empresa ? empresa.socioNome : '';
     d.emails.forEach(function (m) { if (m.tipo === 'solicitacao' && digits(m.cpf) === digits(cpf)) m.status = 'lido'; });
-    if (!d.emails.some(function (m) { return m.tipo === 'convite' && digits(m.cpf) === digits(cpf); })) {
+    if (!d.emails.some(function (m) { return m.tipo === 'senha' && digits(m.cpf) === digits(cpf); })) {
       var t = agora();
       d.emails.push({
-        id: uid('mail'), tipo: 'convite',
+        id: uid('mail'), tipo: 'senha',
         para: r.email, nome: r.nome, cpf: r.cpf,
         assunto: 'Acesso aprovado — crie sua senha no SISLOG',
-        corpo: 'Olá ' + r.nome + ', seu acesso para representar ' + (empresa ? empresa.razaoSocial : 'a empresa') +
-          ' foi aprovado. Aceite para criar sua senha e acessar o portal.',
+        corpo: 'Olá ' + r.nome + ', sua solicitação de acesso para representar ' + (empresa ? empresa.razaoSocial : 'a empresa') +
+          ' foi APROVADA pelo sócio administrador. Clique no botão abaixo para criar sua senha e acessar o SISLOG.',
+        status: 'nao_lido', repId: r.id, data: t.data, hora: t.hora
+      });
+    }
+    save(d);
+    return r;
+  }
+
+  // Sócio recusa a solicitação -> status recusado + e-mail informando a recusa
+  function rejeitarRepresentantePorCpf(cpf) {
+    var d = get();
+    var empresa = d.empresa || garantirEmpresa();
+    var r = d.representantes.filter(function (x) { return digits(x.cpf) === digits(cpf); })[0];
+    if (!r) return null;
+    r.status = 'recusado';
+    r.recusadoEm = new Date().toISOString();
+    d.emails.forEach(function (m) { if (m.tipo === 'solicitacao' && digits(m.cpf) === digits(cpf)) m.status = 'lido'; });
+    if (!d.emails.some(function (m) { return m.tipo === 'rejeitado' && digits(m.cpf) === digits(cpf); })) {
+      var t = agora();
+      d.emails.push({
+        id: uid('mail'), tipo: 'rejeitado',
+        para: r.email, nome: r.nome, cpf: r.cpf,
+        assunto: 'Solicitação de acesso não aprovada — SISLOG',
+        corpo: 'Olá ' + r.nome + ', informamos que sua solicitação de acesso para representar ' +
+          (empresa ? empresa.razaoSocial : 'a empresa') + ' NÃO foi aprovada pelo sócio administrador. ' +
+          'Em caso de dúvidas, entre em contato com o sócio responsável pela empresa.',
         status: 'nao_lido', repId: r.id, data: t.data, hora: t.hora
       });
     }
@@ -329,6 +354,27 @@
     return 'nenhum';
   }
 
+  // Situação de um CPF para a recuperação do chat.
+  // Retorna { fonte: 'cadfor' | 'painel' | 'nenhum', status }
+  //   cadfor  -> status: 'aprovado' | 'em_analise' | 'rejeitado'
+  //   painel  -> status: 'aceito'   | 'pendente'   | 'recusado'
+  function situacaoCadastroPorCpf(cpf) {
+    var c = digits(cpf);
+    if (!c) return { fonte: 'nenhum', status: null };
+    var d = get();
+    var peds = d.pedidos.filter(function (p) { return digits(p.cpf) === c; });
+    if (peds.length) return { fonte: 'cadfor', status: peds[peds.length - 1].status };
+    var rep = d.representantes.filter(function (r) { return digits(r.cpf) === c; })[0];
+    if (rep) return { fonte: 'painel', status: rep.status };
+    return { fonte: 'nenhum', status: null };
+  }
+
+  // Confere se o CNPJ informado corresponde à empresa em cache
+  function empresaCadastradaPorCnpj(cnpj) {
+    var e = getEmpresa();
+    return !!(e && digits(e.cnpj) === digits(cnpj));
+  }
+
   function listarPedidos() { return get().pedidos.slice().reverse(); } // mais recentes primeiro
   function getPedido(id) { return get().pedidos.filter(function (p) { return p.id === id; })[0] || null; }
 
@@ -446,6 +492,7 @@
     getRepresentante: getRepresentante, getRepresentantePorCpf: getRepresentantePorCpf,
     removerRepresentante: removerRepresentante, aceitarConvitePorCpf: aceitarConvitePorCpf,
     criarSolicitacaoRepresentante: criarSolicitacaoRepresentante, aprovarRepresentantePorCpf: aprovarRepresentantePorCpf,
+    rejeitarRepresentantePorCpf: rejeitarRepresentantePorCpf,
     // e-mails
     listarEmails: listarEmails, getEmail: getEmail, marcarEmailLido: marcarEmailLido,
     // autorização (chat)
@@ -453,6 +500,7 @@
     // pedidos de análise (CADFOR)
     criarPedidoAnalise: criarPedidoAnalise, listarPedidos: listarPedidos, getPedido: getPedido,
     pedidoEmAnalise: pedidoEmAnalise, pedidoAprovado: pedidoAprovado, situacaoUltimoCadastro: situacaoUltimoCadastro,
+    situacaoCadastroPorCpf: situacaoCadastroPorCpf, empresaCadastradaPorCnpj: empresaCadastradaPorCnpj,
     aprovarPedido: aprovarPedido, rejeitarPedido: rejeitarPedido,
     // util
     resetar: resetar, maskEmail: maskEmail, maskCpf: maskCpf,

@@ -93,6 +93,7 @@
 .mnl-chip.success { background: var(--mnl-success-lighter); color: var(--mnl-success-darker); }
 .mnl-chip.primary { background: var(--mnl-primary-lighter); color: var(--mnl-primary-darker); }
 .mnl-chip.warning { background: var(--mnl-warning-lighter); color: var(--mnl-warning-darker); }
+.mnl-chip.error { background: var(--mnl-error-lighter); color: var(--mnl-error-darker); }
 
 /* ---------- Avatar ---------- */
 .mnl-avatar { display: inline-grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--mnl-primary-lighter); color: var(--mnl-primary-darker); font-weight: 700; font-size: 18px; flex: none; }

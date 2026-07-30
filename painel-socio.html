@@ -6,7 +6,7 @@
   <meta name="description" content="Painel do sócio administrador — SISLOG">
   <title>SISLOG — Painel do sócio</title>
   <link rel="stylesheet" href="styles.css?v=5">
-  <link rel="stylesheet" href="minimals.css?v=5">
+  <link rel="stylesheet" href="minimals.css?v=6">
   <style>
     .rep-tablewrap { border:1px solid var(--mnl-divider); border-radius:12px; overflow-x:auto; }
     table.rep-table { width:100%; min-width:960px; border-collapse:collapse; font-size:14px; }
@@ -84,8 +84,8 @@
   </main>
 
   <script src="app.js?v=5"></script>
-  <script src="db.js?v=10"></script>
-  <script src="painel.js?v=8"></script>
+  <script src="db.js?v=11"></script>
+  <script src="painel.js?v=9"></script>
   <script>
     (function () {
       var DB = window.SislogDB, UI = window.SislogPainel;
@@ -111,6 +111,10 @@
         UI.renderEmpresa(document.getElementById('empresaCard'));
         UI.renderTabelaRepresentantes(repList, {
           onApprove: function (id) { var r = DB.getRepresentante(id); if (r) DB.aprovarRepresentantePorCpf(r.cpf); refresh(); },
+          onReject: function (id) {
+            var r = DB.getRepresentante(id);
+            if (r && window.confirm('Recusar a solicitação de ' + r.nome + '? O solicitante será notificado por e-mail.')) { DB.rejeitarRepresentantePorCpf(r.cpf); refresh(); }
+          },
           onRemove: function (id) {
             var r = DB.getRepresentante(id);
             if (window.confirm('Excluir o representante ' + (r ? r.nome : '') + '? Esta ação não pode ser desfeita.')) { DB.removerRepresentante(id); refresh(); }

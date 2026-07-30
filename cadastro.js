@@ -33,16 +33,81 @@
       // Novo cadastro?
       novo_cadastro: { bot: [ { text: 'Você deseja realizar um novo cadastro de fornecedor?' } ],
         input: { type: 'choice', options: ['Sim', 'Não'], placeholder: 'Sim ou Não',
-          route: function (v) { return isSim(v) ? 'is_socio' : 'solicita_doc'; } } },
+          route: function (v) { return isSim(v) ? 'is_socio' : 'recupera_cnpj'; } } },
 
-      // Novo cadastro? Não -> Solicita CPF/CNPJ -> Recupera cadastro iniciado
-      solicita_doc: { bot: [ { text: 'Sem problemas! Para localizarmos seu cadastro em andamento, informe o CPF do representante legal ou o CNPJ da empresa.' } ],
-        input: { type: 'text', placeholder: 'Informe o CPF ou o CNPJ...', route: function (v) { session.consultaDoc = v; return 'recupera'; } } },
-      recupera: { bot: [ { text: 'Estamos localizando seu cadastro...' } ],
-        decide: function () { return (DB && DB.pedidoEmAnalise(session.consultaDoc)) ? 'consulta_em_analise' : 'is_socio'; } },
-      consulta_em_analise: { bot: [
-        { text: 'Encontramos um cadastro vinculado a este documento.' },
-        { text: '⏳ Seu cadastro está <strong>em aprovação</strong>. Nossa equipe está analisando as informações e você será comunicado por e-mail assim que a análise for concluída.' }
+      // Novo cadastro? Não -> pede o CNPJ primeiro
+      recupera_cnpj: { bot: [ { text: 'Sem problemas! Para localizarmos seu cadastro, informe o CNPJ da empresa.' } ],
+        input: { type: 'text', mask: 'cnpj', placeholder: 'Informe o CNPJ (00.000.000/0000-00)...',
+          validate: function (v) { return DB ? DB.cnpjFormatoValido(v) : true; },
+          erro: 'CNPJ inválido. Informe no formato 00.000.000/0000-00 (14 dígitos).',
+          route: function (v) { session.cnpj = v; return 'recupera_valida_cnpj'; } } },
+      recupera_valida_cnpj: { bot: [ { text: 'Localizando a empresa...' } ],
+        decide: function () { return (DB && DB.empresaCadastradaPorCnpj(session.cnpj)) ? 'recupera_empresa_ok' : 'recupera_empresa_nova'; } },
+      // CNPJ não está no cache -> segue para o fluxo padrão de novo cadastro
+      recupera_empresa_nova: { bot: [
+        { text: 'Não localizamos um cadastro para este CNPJ.' },
+        { text: 'Vamos iniciar o cadastro da empresa.' }
+      ], next: 'is_socio' },
+      // CNPJ confere com o cache -> empresa cadastrada, pede o CPF
+      recupera_empresa_ok: {
+        bot: function () {
+          var e = DB ? DB.getEmpresa() : null;
+          return [
+            { text: '✅ A empresa ' + (e ? '<strong>' + e.razaoSocial + '</strong> ' : '') + 'está cadastrada.' },
+            { text: 'Agora informe o seu CPF para localizarmos o seu cadastro.' }
+          ];
+        },
+        input: { type: 'text', mask: 'cpf', placeholder: 'Informe o CPF (000.000.000-00)...',
+          validate: function (v) { return DB ? DB.cpfFormatoValido(v) : true; },
+          erro: 'CPF inválido. Informe no formato 000.000.000-00 (11 dígitos).',
+          route: function (v) { session.cpf = v; return 'recupera_status'; } } },
+      recupera_status: { bot: [ { text: 'Localizando o seu cadastro...' } ],
+        decide: function () {
+          var r = DB ? DB.situacaoCadastroPorCpf(session.cpf) : { fonte: 'nenhum' };
+          if (r.fonte === 'cadfor') {
+            if (r.status === 'aprovado') return 'rec_cadfor_aceito';
+            if (r.status === 'rejeitado') return 'rec_cadfor_recusado';
+            return 'rec_cadfor_pendente';
+          }
+          if (r.fonte === 'painel') {
+            if (r.status === 'aceito') return 'rec_painel_aceito';
+            if (r.status === 'recusado') return 'rec_painel_recusado';
+            return 'rec_painel_pendente';
+          }
+          return 'rec_nao_encontrado';
+        } },
+
+      // --- Resultados: cadastro no PAINEL (aprovação do sócio) ---
+      rec_painel_aceito: { bot: [
+        { text: '🎉 Seu cadastro foi <strong>aceito</strong>!' },
+        { text: 'Enviamos um e-mail para você criar sua senha de acesso. Clique no botão abaixo ou acesse sua caixa de e-mails.' }
+      ], end: true, actions: [ { label: 'Criar senha de acesso', href: 'cadastro-senha.html', newTab: true } ] },
+      rec_painel_pendente: { bot: [
+        { text: '⏳ Seu cadastro está <strong>pendente</strong> de aprovação do sócio administrador.' },
+        { text: 'Por favor, aguarde. Assim que for aprovado, você receberá um e-mail para criar sua senha.' }
+      ], end: true },
+      rec_painel_recusado: { bot: [
+        { text: 'Seu cadastro <strong>não foi aprovado</strong> pelo sócio administrador.' },
+        { text: 'Confira sua caixa de e-mails para mais informações.' }
+      ], end: true },
+
+      // --- Resultados: cadastro no CADFOR ---
+      rec_cadfor_aceito: { bot: [
+        { text: '🎉 Seu CPF foi <strong>aceito</strong> pelo CADFOR!' },
+        { text: 'Acesse sua caixa de e-mails para criar sua senha de acesso, ou use o botão abaixo.' }
+      ], end: true, actions: [ { label: 'Criar senha de acesso', href: 'cadastro-senha.html', newTab: true } ] },
+      rec_cadfor_pendente: { bot: [
+        { text: '⏳ Seu CPF ainda está <strong>em análise</strong> pelo CADFOR.' },
+        { text: 'Assim que a análise for concluída, você será comunicado por e-mail.' }
+      ], end: true },
+      rec_cadfor_recusado: { bot: [
+        { text: 'Seu cadastro foi <strong>recusado</strong> pelo CADFOR.' },
+        { text: 'Confira sua caixa de e-mails para mais informações.' }
+      ], end: true },
+
+      rec_nao_encontrado: { bot: [
+        { text: 'Não localizamos um cadastro para este CPF nesta empresa.' },
+        { text: 'Verifique os dados informados ou inicie um novo cadastro.' }
       ], end: true },
 
       // É sócio/administrador?
